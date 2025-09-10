@@ -22,6 +22,7 @@ export const exportToExcel = (records: LedgerRecord[], fileName: string = 'ssp_r
   XLSX.utils.book_append_sheet(workbook, worksheet, 'SSP Records');
   XLSX.writeFile(workbook, `${fileName}.xlsx`);
 };
+
 // Export records to PDF
 export const exportToPDF = (records: LedgerRecord[], fileName: string = 'ssp_records', sspFilter?: string) => {
   // Create landscape PDF
@@ -119,7 +120,7 @@ export const exportToPDF = (records: LedgerRecord[], fileName: string = 'ssp_rec
     doc.text('Additional Information', 14, y);
     y += 10;
     doc.setFontSize(10);
-    records.forEach((record, index) => {
+    records.forEach((record, ) => {
       if (record.challenges || record.remarks) {
         doc.setFillColor(245, 245, 245);
         doc.rect(14, y, 270, 25, 'F');
