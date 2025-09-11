@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import { LedgerRecord } from '../context/RecordsContext';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 // Export records to Excel
 export const exportToExcel = (records: LedgerRecord[], fileName: string = 'ssp_records') => {
   const worksheet = XLSX.utils.json_to_sheet(records.map(record => ({
@@ -25,7 +26,7 @@ export const exportToExcel = (records: LedgerRecord[], fileName: string = 'ssp_r
 
 // --------------------------------------------------------
 // Export records to PDF
-export const exportToPDF = (records: LedgerRecord[], fileName: string = 'ssp_records', sspFilter?: string) => {
+export const exportToPDF = async (records: LedgerRecord[], fileName: string = 'ssp_records', sspFilter?: string) => {
   // Create landscape PDF
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -144,5 +145,11 @@ export const exportToPDF = (records: LedgerRecord[], fileName: string = 'ssp_rec
     });
   }
   // Save PDF
-  doc.output('dataurlnewwindow', { filename: `${fileName}.pdf` });
+  // After generating the PDF as a Blob or base64:
+const pdfBase64 = doc.output('datauristring').split(',')[1];
+await Filesystem.writeFile({
+  path: `${fileName}.pdf`,
+  data: pdfBase64,
+  directory: Directory.Documents
+});
 };
