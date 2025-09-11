@@ -39,6 +39,7 @@ const Login: React.FC = () => {
           <h1 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             SSP Ledger Book
           </h1>
+          
           <h2 className="mt-6 text-center text-2xl font-bold text-gray-900">
             Sign in to your account
           </h2>
