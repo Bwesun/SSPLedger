@@ -23,6 +23,7 @@ export const exportToExcel = (records: LedgerRecord[], fileName: string = 'ssp_r
   XLSX.writeFile(workbook, `${fileName}.xlsx`);
 };
 
+// --------------------------------------------------------
 // Export records to PDF
 export const exportToPDF = (records: LedgerRecord[], fileName: string = 'ssp_records', sspFilter?: string) => {
   // Create landscape PDF
@@ -143,5 +144,5 @@ export const exportToPDF = (records: LedgerRecord[], fileName: string = 'ssp_rec
     });
   }
   // Save PDF
-  doc.save(`${fileName}.pdf`);
+  doc.output('dataurlnewwindow', { filename: `${fileName}.pdf` });
 };
