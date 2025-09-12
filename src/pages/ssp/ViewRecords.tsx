@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRecords } from '../../context/RecordsContext';
-import { PlusIcon, DownloadIcon, FileTextIcon } from 'lucide-react';
-import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
+// import { PlusIcon, DownloadIcon, FileTextIcon } from 'lucide-react';
+// import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
 const ViewRecords: React.FC = () => {
   const {
     user
@@ -11,7 +11,7 @@ const ViewRecords: React.FC = () => {
   const {
     getUserRecords
   } = useRecords();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string>('serviceDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -49,12 +49,12 @@ const ViewRecords: React.FC = () => {
       setSortDirection('asc');
     }
   };
-  const handleExportToExcel = () => {
-    exportToExcel(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`);
-  };
-  const handleExportToPDF = () => {
-    exportToPDF(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`, user?.name);
-  };
+  // const handleExportToExcel = () => {
+  //   exportToExcel(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`);
+  // };
+  // const handleExportToPDF = () => {
+  //   exportToPDF(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`, user?.name);
+  // };
   return <div>
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div className="min-w-0 flex-1">
