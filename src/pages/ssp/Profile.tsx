@@ -89,7 +89,7 @@ const Profile: React.FC = () => {
                 <input type="tel" name="phone" id="phone" value={formData.phone} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
-            <div className="sm:col-span-3">
+            {/* <div className="sm:col-span-3">
               <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
                 Gender
               </label>
@@ -101,7 +101,7 @@ const Profile: React.FC = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
-            </div>
+            </div> */}
             <div className="sm:col-span-2">
               <label htmlFor="state" className="block text-sm font-medium text-gray-700">
                 State

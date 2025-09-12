@@ -90,7 +90,7 @@ const AddRecord: React.FC = () => {
       {error && <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <span className="block sm:inline">{error}</span>
         </div>}
-      {success && <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+      {success && <div className="mb-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
           <span className="block sm:inline">{success}</span>
         </div>}
       <div className="bg-white shadow rounded-lg">
@@ -101,7 +101,7 @@ const AddRecord: React.FC = () => {
                 S/N
               </label>
               <div className="mt-1">
-                <input type="number" name="serialNumber" id="serialNumber" value={formData.serialNumber} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="number" name="serialNumber" id="serialNumber" value={formData.serialNumber} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-4">
@@ -109,7 +109,7 @@ const AddRecord: React.FC = () => {
                 Farmer's Name
               </label>
               <div className="mt-1">
-                <input type="text" name="farmerName" id="farmerName" value={formData.farmerName} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="text" name="farmerName" id="farmerName" value={formData.farmerName} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-3">
@@ -117,7 +117,7 @@ const AddRecord: React.FC = () => {
                 Phone Number
               </label>
               <div className="mt-1">
-                <input type="tel" name="farmerPhone" id="farmerPhone" value={formData.farmerPhone} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="tel" name="farmerPhone" id="farmerPhone" value={formData.farmerPhone} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-3">
@@ -125,7 +125,7 @@ const AddRecord: React.FC = () => {
                 Date of Service
               </label>
               <div className="mt-1">
-                <input type="date" name="serviceDate" id="serviceDate" value={formData.serviceDate} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="date" name="serviceDate" id="serviceDate" value={formData.serviceDate} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-3">
@@ -133,7 +133,7 @@ const AddRecord: React.FC = () => {
                 Crop(s) Treated
               </label>
               <div className="mt-1">
-                <input type="text" name="cropsTreated" id="cropsTreated" value={formData.cropsTreated} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="text" name="cropsTreated" id="cropsTreated" value={formData.cropsTreated} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-3">
@@ -141,7 +141,7 @@ const AddRecord: React.FC = () => {
                 Product Used (Pesticide/Fungicide/Herbicide)
               </label>
               <div className="mt-1">
-                <input type="text" name="productUsed" id="productUsed" value={formData.productUsed} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="text" name="productUsed" id="productUsed" value={formData.productUsed} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-2">
@@ -149,7 +149,7 @@ const AddRecord: React.FC = () => {
                 No. of Sprayer Loads Used
               </label>
               <div className="mt-1">
-                <input type="number" name="sprayerLoads" id="sprayerLoads" value={formData.sprayerLoads} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="number" name="sprayerLoads" id="sprayerLoads" value={formData.sprayerLoads} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-2">
@@ -157,7 +157,7 @@ const AddRecord: React.FC = () => {
                 Total Service Cost (₦)
               </label>
               <div className="mt-1">
-                <input type="number" name="serviceCost" id="serviceCost" value={formData.serviceCost} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="number" name="serviceCost" id="serviceCost" value={formData.serviceCost} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-2">
@@ -165,12 +165,12 @@ const AddRecord: React.FC = () => {
                 Area Treated (Ha)
               </label>
               <div className="mt-1">
-                <input type="number" step="0.01" name="areaTreated" id="areaTreated" value={formData.areaTreated} onChange={handleChange} required className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <input type="number" step="0.01" name="areaTreated" id="areaTreated" value={formData.areaTreated} onChange={ handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-2">
               <div className="flex items-center h-full">
-                <input id="ppeUsed" name="ppeUsed" type="checkbox" checked={formData.ppeUsed} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                <input id="ppeUsed" name="ppeUsed" type="checkbox" checked={formData.ppeUsed} onChange={handleChange} className="bg-green-50 -4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
                 <label htmlFor="ppeUsed" className="ml-2 block text-sm text-gray-900">
                   PPE Used? (Yes/No)
                 </label>
@@ -181,7 +181,7 @@ const AddRecord: React.FC = () => {
                 Challenges Encountered
               </label>
               <div className="mt-1">
-                <textarea id="challenges" name="challenges" rows={3} value={formData.challenges} onChange={handleChange} className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <textarea id="challenges" name="challenges" rows={3} value={formData.challenges} onChange={handleChange} className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
             <div className="sm:col-span-3">
@@ -189,7 +189,7 @@ const AddRecord: React.FC = () => {
                 Remarks
               </label>
               <div className="mt-1">
-                <textarea id="remarks" name="remarks" rows={3} value={formData.remarks} onChange={handleChange} className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                <textarea id="remarks" name="remarks" rows={3} value={formData.remarks} onChange={handleChange} className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
             </div>
           </div>
