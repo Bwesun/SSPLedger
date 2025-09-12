@@ -27,6 +27,8 @@ export const exportToExcel = (
   XLSX.utils.book_append_sheet(workbook, worksheet, 'SSP Records')
   XLSX.writeFile(workbook, `${fileName}.xlsx`)
 }
+
+
 // Export records to PDF
 export const exportToPDF = (
   records: LedgerRecord[],
@@ -66,14 +68,14 @@ export const exportToPDF = (
     'Crops',
     'Product',
     'Loads',
-    'Area (Ha)',
-    'Cost (₦)',
+    'Area(Ha)',
+    'Cost(N)',
     'PPE',
     'Challenges',
     'Remarks',
   ]
   doc.setFontSize(10)
-  const colWidths = [10, 30, 30, 25, 20, 25, 25, 15, 20, 20, 15, 75, 80]
+  const colWidths = [10, 40, 40, 30, 25, 25, 25, 15, 20, 20, 15, 70, 75]
   // Draw header row
   doc.setFillColor(41, 128, 185)
   doc.setTextColor(255, 255, 255)
