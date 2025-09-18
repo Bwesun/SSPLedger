@@ -4,17 +4,17 @@ import { DownloadIcon, FileTextIcon, SearchIcon } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
 const RecordManagement: React.FC = () => {
   const {
-    getAllRecords
+    records
   } = useRecords();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof LedgerRecord>('serviceDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterSSP, setFilterSSP] = useState<string>('');
-  const allRecords = getAllRecords();
+
   // Get unique SSPs for filter
-  const uniqueSSPs = [...new Set(allRecords.map(record => record.sspName))];
+  const uniqueSSPs = [...new Set(records.map(record => record.sspName))];
   // Filter and sort records
-  const filteredRecords = allRecords.filter(record => {
+  const filteredRecords = records.filter(record => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = record.farmerName.toLowerCase().includes(searchLower) || record.cropsTreated.toLowerCase().includes(searchLower) || record.productUsed.toLowerCase().includes(searchLower);
     const matchesSSP = filterSSP ? record.sspName === filterSSP : true;

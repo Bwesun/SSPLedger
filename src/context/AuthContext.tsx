@@ -21,28 +21,10 @@ interface AuthContextType {
   logout: () => void;
   updateProfile: (userData: Partial<User>) => Promise<boolean>;
 }
-// Mock users for demo
-const mockUsers: (User & {
-  password: string;
-})[] = [{
-  id: '1',
-  name: 'Admin User',
-  email: 'admin@example.com',
-  password: 'password',
-  role: 'admin'
-}, {
-  id: '2',
-  name: 'John Doe',
-  email: 'john@example.com',
-  password: 'password',
-  role: 'ssp',
-  phone: '08012345678',
-  gender: 'Male',
-  state: 'Lagos',
-  lga: 'Ikeja',
-  community: 'Ogba'
-}];
+const API_URL = 'http://localhost:3001/api';
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 export const AuthProvider: React.FC<{
   children: React.ReactNode;
 }> = ({
@@ -50,7 +32,7 @@ export const AuthProvider: React.FC<{
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  // Check for saved user on component mount
+
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -58,64 +40,80 @@ export const AuthProvider: React.FC<{
       setIsAuthenticated(true);
     }
   }, []);
+
   const login = async (email: string, password: string): Promise<boolean> => {
-    // In a real app, this would be an API call
-    const foundUser = mockUsers.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      const {
-        password,
-        ...userWithoutPassword
-      } = foundUser;
-      setUser(userWithoutPassword);
-      setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      return true;
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
     }
-    return false;
   };
+
   const register = async (userData: Partial<User> & {
     password: string;
   }): Promise<boolean> => {
-    // In a real app, this would be an API call
-    const newUser = {
-      id: Date.now().toString(),
-      name: userData.name || '',
-      email: userData.email || '',
-      password: userData.password,
-      role: 'ssp' as const,
-      phone: userData.phone || '',
-      gender: userData.gender || '',
-      state: userData.state || '',
-      lga: userData.lga || '',
-      community: userData.community || ''
-    };
-    mockUsers.push(newUser);
-    const {
-      password,
-      ...userWithoutPassword
-    } = newUser;
-    setUser(userWithoutPassword);
-    setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-    return true;
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Registration failed:', error);
+      return false;
+    }
   };
+
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('user');
   };
+
   const updateProfile = async (userData: Partial<User>): Promise<boolean> => {
-    // In a real app, this would be an API call
-    if (user) {
-      const updatedUser = {
-        ...user,
-        ...userData
-      };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      return true;
+    if (!user) return false;
+    try {
+      const response = await fetch(`${API_URL}/ssp/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          // In a real app, you'd send an auth token
+        },
+        body: JSON.stringify(userData)
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUser(updatedUser.user);
+        localStorage.setItem('user', JSON.stringify(updatedUser.user));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      return false;
     }
-    return false;
   };
   return <AuthContext.Provider value={{
     user,

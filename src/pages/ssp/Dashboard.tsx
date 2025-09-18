@@ -1,29 +1,39 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRecords } from '../../context/RecordsContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FileTextIcon, SprayCanIcon, CropIcon, DollarSignIcon } from 'lucide-react';
+
+const API_URL = 'http://localhost:3001/api';
+
 const Dashboard: React.FC = () => {
   const {
     user
   } = useAuth();
   const {
-    getUserRecords
+    records
   } = useRecords();
-  const records = useMemo(() => {
-    if (!user) return [];
-    return getUserRecords(user.id);
-  }, [getUserRecords, user]);
-  // Calculate statistics
-  const totalRecords = records.length;
-  const totalAreaTreated = records.reduce((sum, record) => sum + record.areaTreated, 0);
-  const totalServiceCost = records.reduce((sum, record) => sum + record.serviceCost, 0);
-  const uniqueCrops = [...new Set(records.map(record => record.cropsTreated))].length;
-  // Prepare chart data - last 5 records
-  const chartData = records.slice(-5).map(record => ({
+  const [dashboardData, setDashboardData] = useState({
+    totalRecords: 0,
+    totalAreaTreated: 0,
+    totalServiceCost: 0,
+    uniqueCrops: 0,
+    recentRecords: []
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      const response = await fetch(`${API_URL}/ssp/dashboard`);
+      const data = await response.json();
+      setDashboardData(data);
+    };
+    fetchDashboardData();
+  }, [records]);
+
+  const chartData = dashboardData.recentRecords.map((record: any) => ({
     name: record.farmerName,
     areaTreated: record.areaTreated,
-    serviceCost: record.serviceCost / 1000 // Convert to thousands for better display
+    serviceCost: record.serviceCost / 1000,
   }));
   return <div className="space-y-6">
       <div>
@@ -44,7 +54,7 @@ const Dashboard: React.FC = () => {
                     Total Records
                   </dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {totalRecords}
+                    {dashboardData.totalRecords}
                   </dd>
                 </dl>
               </div>
@@ -63,7 +73,7 @@ const Dashboard: React.FC = () => {
                     Unique Crops
                   </dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {uniqueCrops}
+                    {dashboardData.uniqueCrops}
                   </dd>
                 </dl>
               </div>
@@ -82,7 +92,7 @@ const Dashboard: React.FC = () => {
                     Area Treated (Ha)
                   </dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {totalAreaTreated.toFixed(2)}
+                    {dashboardData.totalAreaTreated.toFixed(2)}
                   </dd>
                 </dl>
               </div>
@@ -101,7 +111,7 @@ const Dashboard: React.FC = () => {
                     Total Revenue (₦)
                   </dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {totalServiceCost.toLocaleString()}
+                    {dashboardData.totalServiceCost.toLocaleString()}
                   </dd>
                 </dl>
               </div>
@@ -142,7 +152,7 @@ const Dashboard: React.FC = () => {
           <h2 className="text-lg font-medium text-gray-900">Recent Records</h2>
         </div>
         <div className="border-t border-gray-200 overflow-x-auto">
-          {records.length > 0 ? <table className="min-w-full divide-y divide-gray-200">
+          {dashboardData.recentRecords.length > 0 ? <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -163,7 +173,7 @@ const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {records.slice(-5).map(record => <tr key={record.id}>
+                {dashboardData.recentRecords.map((record: any) => <tr key={record.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {record.farmerName}
                     </td>
