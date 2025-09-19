@@ -1,36 +1,55 @@
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export function getApiBase() {
-  const base = import.meta.env.VITE_API_URL || '/api';
-  return base.replace(/\/$/, '');
+  const base = (import.meta as any).env?.VITE_API_URL || '/api';
+  return String(base).replace(/\/$/, '');
 }
+
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: getApiBase(),
+  withCredentials: false,
+});
+
+axiosInstance.interceptors.request.use((config) => {
+  const skipAuth = (config as any).skipAuth;
+  if (!skipAuth) {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers = config.headers || {};
+      (config.headers as any).Authorization = `Bearer ${token}`;
+    }
+  }
+  if (config.data && !(config.headers as any)?.['Content-Type']) {
+    config.headers = config.headers || {};
+    (config.headers as any)['Content-Type'] = 'application/json';
+  }
+  return config;
+});
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const message = error?.response?.data?.message || error.message || 'Request failed';
+    return Promise.reject(new Error(message));
+  }
+);
 
 export async function apiFetch<T>(path: string, options: { method?: HttpMethod; body?: any; headers?: Record<string, string>; auth?: boolean } = {}): Promise<T> {
   const { method = 'GET', body, headers = {}, auth = true } = options;
-  const token = auth ? localStorage.getItem('token') : null;
-  const res = await fetch(`${getApiBase()}${path.startsWith('/') ? '' : '/'}${path}`.replace(/\/\/+/, '/'), {
+  const cfg: AxiosRequestConfig = {
+    url: path,
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    let errorMessage = text;
-    try {
-      const data = JSON.parse(text);
-      errorMessage = data?.message || errorMessage;
-    } catch {}
-    throw new Error(errorMessage || `Request failed with status ${res.status}`);
+    data: body,
+    headers,
+  };
+  if (!auth) {
+    (cfg as any).skipAuth = true;
   }
-  const contentType = res.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) {
-    return (await res.json()) as T;
-  }
-  // @ts-expect-error allow returning empty as any
-  return undefined as T;
+  const res = await axiosInstance.request<T>(cfg);
+  // axios interceptor returns full response; we want data
+  return res.data as T;
 }
+
+export { axiosInstance };
