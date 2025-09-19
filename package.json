@@ -7,8 +7,7 @@
     "dev": "npx vite",
     "build": "npx vite build",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "preview": "npx vite preview",
-    "start:backend": "node backend/server.js"
+    "preview": "npx vite preview"
   },
   "dependencies": {
     "jspdf": "^2.5.1",
