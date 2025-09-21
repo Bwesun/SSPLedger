@@ -21,6 +21,100 @@ export interface LedgerRecord {
   createdAt: string;
 }
 
+// Mock records for demo purposes when API is not available
+const mockRecords: LedgerRecord[] = [
+  {
+    id: '1',
+    sspId: '2', // John Doe's ID from UserManagement
+    sspName: 'John Doe',
+    serialNumber: 1,
+    farmerName: 'Adebayo Okunola',
+    farmerPhone: '08012345678',
+    serviceDate: '2024-01-15',
+    cropsTreated: 'Maize, Cassava',
+    productUsed: 'Herbicide A',
+    sprayerLoads: 3,
+    serviceCost: 15000,
+    areaTreated: 2.5,
+    ppeUsed: true,
+    challenges: 'Heavy rain during application',
+    remarks: 'Good coverage achieved',
+    createdAt: '2024-01-15T10:30:00Z'
+  },
+  {
+    id: '2',
+    sspId: '2',
+    sspName: 'John Doe',
+    serialNumber: 2,
+    farmerName: 'Fatima Ibrahim',
+    farmerPhone: '08098765432',
+    serviceDate: '2024-01-18',
+    cropsTreated: 'Rice',
+    productUsed: 'Insecticide B',
+    sprayerLoads: 2,
+    serviceCost: 12000,
+    areaTreated: 1.8,
+    ppeUsed: true,
+    challenges: 'None',
+    remarks: 'Excellent service delivery',
+    createdAt: '2024-01-18T14:15:00Z'
+  },
+  {
+    id: '3',
+    sspId: '2',
+    sspName: 'John Doe',
+    serialNumber: 3,
+    farmerName: 'Chinedu Okoro',
+    farmerPhone: '08087654321',
+    serviceDate: '2024-01-22',
+    cropsTreated: 'Yam, Cocoyam',
+    productUsed: 'Fungicide C',
+    sprayerLoads: 4,
+    serviceCost: 20000,
+    areaTreated: 3.2,
+    ppeUsed: false,
+    challenges: 'Equipment malfunction',
+    remarks: 'Service completed successfully after repair',
+    createdAt: '2024-01-22T09:45:00Z'
+  },
+  {
+    id: '4',
+    sspId: '3', // Jane Smith's ID from UserManagement
+    sspName: 'Jane Smith',
+    serialNumber: 1,
+    farmerName: 'Olumide Adeyemi',
+    farmerPhone: '08076543210',
+    serviceDate: '2024-01-20',
+    cropsTreated: 'Tomato, Pepper',
+    productUsed: 'Herbicide D',
+    sprayerLoads: 2,
+    serviceCost: 10000,
+    areaTreated: 1.5,
+    ppeUsed: true,
+    challenges: 'None',
+    remarks: 'Farmer very satisfied',
+    createdAt: '2024-01-20T11:20:00Z'
+  },
+  {
+    id: '5',
+    sspId: '2',
+    sspName: 'John Doe',
+    serialNumber: 4,
+    farmerName: 'Hauwa Abdullahi',
+    farmerPhone: '08065432109',
+    serviceDate: '2024-01-25',
+    cropsTreated: 'Groundnut',
+    productUsed: 'Insecticide E',
+    sprayerLoads: 1,
+    serviceCost: 8000,
+    areaTreated: 1.0,
+    ppeUsed: true,
+    challenges: 'Wind during application',
+    remarks: 'Service adjusted for wind conditions',
+    createdAt: '2024-01-25T16:30:00Z'
+  }
+];
+
 interface RecordsContextType {
   records: LedgerRecord[];
   addRecord: (record: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => Promise<void>;
@@ -70,7 +164,9 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setRecords([]);
       }
     } catch (e) {
-      setRecords([]);
+      // Fallback to mock data when API is not available (for demo purposes)
+      console.log('API not available, using mock data for demo');
+      setRecords(mockRecords);
     } finally {
       setLoading(false);
     }

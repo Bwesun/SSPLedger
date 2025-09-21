@@ -14,6 +14,38 @@ export interface User {
   community?: string;
 }
 
+// Mock users for demo purposes when API is not available
+const mockUsers: User[] = [
+  {
+    id: '1',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    role: 'admin'
+  },
+  {
+    id: '2',
+    name: 'John Doe',
+    email: 'john@example.com',
+    role: 'ssp',
+    phone: '08012345678',
+    gender: 'Male',
+    state: 'Lagos',
+    lga: 'Ikeja',
+    community: 'Ogba'
+  },
+  {
+    id: '3',
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    role: 'ssp',
+    phone: '08023456789',
+    gender: 'Female',
+    state: 'Oyo',
+    lga: 'Ibadan North',
+    community: 'Bodija'
+  }
+];
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -52,6 +84,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(true);
       return true;
     } catch (e) {
+      // Fallback to mock authentication when API is not available (for demo purposes)
+      console.log('API not available, using mock authentication for demo');
+      
+      // Demo password is 'password' for all demo users
+      if (password === 'password') {
+        const mockUser = mockUsers.find(user => user.email === email);
+        if (mockUser) {
+          // Create a mock token
+          const mockToken = 'demo-token-' + mockUser.id;
+          localStorage.setItem('token', mockToken);
+          localStorage.setItem('user', JSON.stringify(mockUser));
+          setUser(mockUser);
+          setIsAuthenticated(true);
+          return true;
+        }
+      }
       return false;
     }
   };
