@@ -2,41 +2,28 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { User } from '../../context/AuthContext';
 import { EditIcon, TrashIcon, UserPlusIcon } from 'lucide-react';
-// Mock users for demo
-const mockUsers: User[] = [{
-  id: '1',
-  name: 'Admin User',
-  email: 'admin@example.com',
-  role: 'admin'
-}, {
-  id: '2',
-  name: 'John Doe',
-  email: 'john@example.com',
-  role: 'ssp',
-  phone: '08012345678',
-  gender: 'Male',
-  state: 'Lagos',
-  lga: 'Ikeja',
-  community: 'Ogba'
-}, {
-  id: '3',
-  name: 'Jane Smith',
-  email: 'jane@example.com',
-  role: 'ssp',
-  phone: '08023456789',
-  gender: 'Female',
-  state: 'Oyo',
-  lga: 'Ibadan North',
-  community: 'Bodija'
-}];
+import { useEffect } from 'react';
+
+const API_URL = 'http://localhost:3001/api';
+
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof User>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  // Filter and sort users
+
+  const fetchUsers = async () => {
+    const response = await fetch(`${API_URL}/admin/users`);
+    const data = await response.json();
+    setUsers(data);
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   const filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()) || user.state && user.state.toLowerCase().includes(searchTerm.toLowerCase()) || user.lga && user.lga.toLowerCase().includes(searchTerm.toLowerCase())).sort((a, b) => {
     const aValue = a[sortField] || '';
     const bValue = b[sortField] || '';
@@ -57,9 +44,10 @@ const UserManagement: React.FC = () => {
     setCurrentUser(user);
     setIsModalOpen(true);
   };
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      setUsers(users.filter(user => user.id !== userId));
+      await fetch(`${API_URL}/admin/users/${userId}`, { method: 'DELETE' });
+      fetchUsers();
     }
   };
   const handleAddUser = () => {

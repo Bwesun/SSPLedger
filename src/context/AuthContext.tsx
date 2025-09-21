@@ -1,5 +1,4 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
-import { apiFetch } from '../utils/api';
 
 // Define user types
 export interface User {
@@ -23,46 +22,71 @@ interface AuthContextType {
   updateProfile: (userData: Partial<User>) => Promise<boolean>;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+console.log('API URL:', API_URL);
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Load saved auth on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const savedToken = localStorage.getItem('token');
-    if (savedUser && savedToken) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
+
+    try {
+      if (savedUser && savedUser !== 'undefined') {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(!!savedToken);
+      }
+    } catch (err) {
+      console.error('Failed to parse user from localStorage:', err);
+      localStorage.removeItem('user');
     }
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
+
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const data = await apiFetch<{ message: string; token: string; user: User }>(`/auth/login`, {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
-        body: { email, password },
-        auth: false,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
       setUser(data.user);
       setIsAuthenticated(true);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.token);
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error('Login failed:', error);
       return false;
     }
   };
 
   const register = async (userData: Partial<User> & { password: string }): Promise<boolean> => {
     try {
-      await apiFetch<{ message: string }>(`/auth/register`, { method: 'POST', body: userData, auth: false });
-      // Auto-login after registration
-      const loginOk = await login(userData.email || '', userData.password);
-      return loginOk;
-    } catch (e) {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Registration failed:', error);
       return false;
     }
   };
@@ -75,15 +99,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateProfile = async (userData: Partial<User>): Promise<boolean> => {
+    const token = localStorage.getItem('token');
+    if (!user || !token) return false;
+
     try {
-      await apiFetch<{ message: string }>(`/ssp/profile`, { method: 'PUT', body: userData });
-      if (user) {
-        const updated = { ...user, ...userData } as User;
-        setUser(updated);
-        localStorage.setItem('user', JSON.stringify(updated));
-      }
+      const response = await fetch(`${API_URL}/ssp/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(userData)
+      });
+
+      if (!response.ok) return false;
+
+      const updatedUser = await response.json();
+      setUser(updatedUser.user);
+      localStorage.setItem('user', JSON.stringify(updatedUser.user));
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error('Profile update failed:', error);
       return false;
     }
   };
@@ -95,9 +131,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

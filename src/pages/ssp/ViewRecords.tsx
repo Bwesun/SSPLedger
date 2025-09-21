@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRecords } from '../../context/RecordsContext';
+import { DownloadIcon, FileTextIcon, PlusIcon } from 'lucide-react';
+import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
 // import { PlusIcon, DownloadIcon, FileTextIcon } from 'lucide-react';
 // import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
 const ViewRecords: React.FC = () => {
@@ -49,12 +51,12 @@ const ViewRecords: React.FC = () => {
       setSortDirection('asc');
     }
   };
-  // const handleExportToExcel = () => {
-  //   exportToExcel(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`);
-  // };
-  // const handleExportToPDF = () => {
-  //   exportToPDF(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`, user?.name);
-  // };
+  const handleExportToExcel = () => {
+    exportToExcel(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`);
+  };
+  const handleExportToPDF = () => {
+    exportToPDF(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`, user?.name);
+  };
   return <div>
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div className="min-w-0 flex-1">
@@ -63,7 +65,7 @@ const ViewRecords: React.FC = () => {
           </h1>
         </div>
         {/* Exports Section */}
-        {/* <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
+        <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
           <button type="button" onClick={handleExportToExcel} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <DownloadIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Export to Excel
@@ -72,11 +74,11 @@ const ViewRecords: React.FC = () => {
             <FileTextIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Export to PDF
           </button>
-          <button type="button" onClick={() => navigate('/ssp/add-record')} className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+          <button type="button" onClick={() => window.location.href = ('/ssp/add-record')} className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Add New Record
           </button>
-        </div> */}
+        </div> {/* */}
       </div>
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">

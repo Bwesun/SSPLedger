@@ -1,51 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRecords } from '../../context/RecordsContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { FileTextIcon, UsersIcon, CropIcon, DollarSignIcon } from 'lucide-react';
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+const API_URL = 'http://localhost:3001/api';
+const token = localStorage.getItem('token');
+console.log('Admin Dashboard Token: ', token)
+
+
 const Dashboard: React.FC = () => {
   const {
-    getAllRecords
+    records
   } = useRecords();
-  const records = getAllRecords();
-  // Calculate statistics
-  const totalRecords = records.length;
-  const totalAreaTreated = records.reduce((sum, record) => sum + record.areaTreated, 0);
-  const totalServiceCost = records.reduce((sum, record) => sum + record.serviceCost, 0);
-  const uniqueSSPs = [...new Set(records.map(record => record.sspId))].length;
-  const uniqueFarmers = [...new Set(records.map(record => record.farmerName))].length;
-  const uniqueCrops = [...new Set(records.map(record => record.cropsTreated))];
-  // Prepare chart data - crop distribution
-  const cropData = uniqueCrops.map(crop => ({
-    name: crop,
-    value: records.filter(record => record.cropsTreated === crop).length
-  }));
-  // Prepare monthly service cost data
-  const monthlyData = Array(12).fill(0).map((_, i) => {
-    const month = i + 1;
-    const monthRecords = records.filter(record => {
-      const recordDate = new Date(record.serviceDate);
-      return recordDate.getMonth() === i;
-    });
-    return {
-      name: new Date(0, i).toLocaleString('default', {
-        month: 'short'
-      }),
-      serviceCost: monthRecords.reduce((sum, record) => sum + record.serviceCost, 0) / 1000,
-      areaTreated: monthRecords.reduce((sum, record) => sum + record.areaTreated, 0)
-    };
+  const [dashboardData, setDashboardData] = useState({
+    totalRecords: 0,
+    totalAreaTreated: 0,
+    totalServiceCost: 0,
+    totalSsp: 0,
+    recentRecords: [],
+    cropData: [],
+    monthlyData: [],
+    sspData: [],
   });
-  // Prepare SSP performance data
-  const sspData = [...new Set(records.map(record => record.sspId))].map(sspId => {
-    const sspRecords = records.filter(record => record.sspId === sspId);
-    const sspName = sspRecords[0]?.sspName || `SSP ${sspId}`;
-    return {
-      name: sspName,
-      records: sspRecords.length,
-      revenue: sspRecords.reduce((sum, record) => sum + record.serviceCost, 0) / 1000,
-      area: sspRecords.reduce((sum, record) => sum + record.areaTreated, 0)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      const response = await fetch(`${API_URL}/admin/dashboard`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      setDashboardData(data);
     };
-  });
+    fetchDashboardData();
+  }, [records]);
   return <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -67,7 +60,7 @@ const Dashboard: React.FC = () => {
                     Total Records
                   </dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {totalRecords}
+                    {dashboardData.totalRecords}
                   </dd>
                 </dl>
               </div>
@@ -86,7 +79,7 @@ const Dashboard: React.FC = () => {
                     Active SSPs
                   </dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {uniqueSSPs}
+                    {dashboardData.totalSsp}
                   </dd>
                 </dl>
               </div>
@@ -105,7 +98,7 @@ const Dashboard: React.FC = () => {
                     Area Treated (Ha)
                   </dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {totalAreaTreated.toFixed(2)}
+                    {dashboardData.totalAreaTreated.toFixed(2)}
                   </dd>
                 </dl>
               </div>
@@ -124,7 +117,7 @@ const Dashboard: React.FC = () => {
                     Total Revenue (₦)
                   </dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {totalServiceCost.toLocaleString()}
+                    {dashboardData.totalServiceCost.toLocaleString()}
                   </dd>
                 </dl>
               </div>
@@ -141,7 +134,7 @@ const Dashboard: React.FC = () => {
           </h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData} margin={{
+              <BarChart data={dashboardData.monthlyData} margin={{
               top: 5,
               right: 30,
               left: 20,
@@ -167,11 +160,11 @@ const Dashboard: React.FC = () => {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={cropData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({
+                <Pie data={dashboardData.cropData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({
                 name,
                 percent
               }) => `${name}: ${(percent * 100).toFixed(0)}%`}>
-                  {cropData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  {dashboardData.cropData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
                 <Legend />
@@ -188,7 +181,7 @@ const Dashboard: React.FC = () => {
         <div className="border-t border-gray-200">
           <div className="h-64 p-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={sspData} margin={{
+              <BarChart data={dashboardData.sspData} margin={{
               top: 5,
               right: 30,
               left: 20,

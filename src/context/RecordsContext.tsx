@@ -1,7 +1,7 @@
-import React, { useEffect, useState, createContext, useContext, useCallback } from 'react';
+import React, { useState, createContext, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { apiFetch } from '../utils/api';
 
+// Ledger record shape
 export interface LedgerRecord {
   id: string;
   sspId: string;
@@ -23,103 +23,99 @@ export interface LedgerRecord {
 
 interface RecordsContextType {
   records: LedgerRecord[];
-  addRecord: (record: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => Promise<void>;
+  addRecord: (
+    record: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>
+  ) => Promise<void>;
   getUserRecords: (userId: string) => LedgerRecord[];
   getAllRecords: () => LedgerRecord[];
-  refresh: () => Promise<void>;
-  loading: boolean;
 }
+
+const API_URL = 'http://localhost:3001/api';
+const token = localStorage.getItem('token');
+console.log('Records Token: ', token);
 
 const RecordsContext = createContext<RecordsContextType | undefined>(undefined);
 
-function mapApiRecord(r: any): LedgerRecord {
-  return {
-    id: String(r.id),
-    sspId: String(r.ssp_id),
-    sspName: r.ssp_name || '',
-    serialNumber: Number(r.serial_number || 0),
-    farmerName: r.farmer_name || '',
-    farmerPhone: r.farmer_phone || '',
-    serviceDate: r.service_date ? String(r.service_date) : new Date().toISOString().split('T')[0],
-    cropsTreated: r.crops_treated || '',
-    productUsed: r.product_used || '',
-    sprayerLoads: Number(r.sprayer_loads || 0),
-    serviceCost: Number(r.service_cost || 0),
-    areaTreated: Number(r.area_treated || 0),
-    ppeUsed: Boolean(r.ppe_used),
-    challenges: r.challenges || '',
-    remarks: r.remarks || '',
-    createdAt: r.created_at ? String(r.created_at) : new Date().toISOString(),
-  };
-}
-
-export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children
+}) => {
   const [records, setRecords] = useState<LedgerRecord[]>([]);
-  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  const load = useCallback(async () => {
+  useEffect(() => {
     if (!user) return;
-    setLoading(true);
-    try {
-      if (user.role === 'ssp') {
-        const data = await apiFetch<any[]>(`/records`);
-        setRecords(data.map(mapApiRecord));
-      } else {
-        // Admin: without an endpoint to get all records, fallback to recent from dashboard is not comprehensive
-        setRecords([]);
-      }
-    } catch (e) {
-      setRecords([]);
-    } finally {
-      setLoading(false);
+    if (user.role === 'admin') {
+      fetchAllRecords();
+    } else {
+      fetchUserRecords();
     }
   }, [user]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const fetchUserRecords = async () => {
+    if (user?.role !== 'ssp') return;
+    const response = await fetch(`${API_URL}/records`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    setRecords(data);
+  };
 
-  const addRecord = async (recordData: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => {
+  const fetchAllRecords = async () => {
+    if (user?.role !== 'admin') return;
+    const response = await fetch(`${API_URL}/admin/records`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    setRecords(data);
+  };
+
+  const addRecord = async (
+    recordData: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>
+  ) => {
     if (!user) return;
-    const payload = {
-      serial_number: recordData.serialNumber,
-      farmer_name: recordData.farmerName,
-      farmer_phone: recordData.farmerPhone,
-      service_date: recordData.serviceDate,
-      crops_treated: recordData.cropsTreated,
-      product_used: recordData.productUsed,
-      sprayer_loads: recordData.sprayerLoads,
-      service_cost: recordData.serviceCost,
-      area_treated: recordData.areaTreated,
-      ppe_used: recordData.ppeUsed,
-      challenges: recordData.challenges,
-      remarks: recordData.remarks,
-    };
-    const created = await apiFetch<any>(`/records`, { method: 'POST', body: payload });
-    setRecords((prev) => [...prev, mapApiRecord(created)]);
+    console.log('Before Sending recordData: ', recordData);
+    const response = await fetch(`${API_URL}/records`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        ...recordData,
+        sspName: user.name
+      })
+    });
+
+    console.log('Add Record request: ', response);
+    if (response.ok) {
+      const newRecord = await response.json();
+      setRecords((prev) => [...prev, newRecord]);
+    }
   };
 
-  const getUserRecords = (userId: string) => {
-    return records.filter((record) => record.sspId === userId);
-  };
+  const getUserRecords = (userId: string) =>
+    records.filter((record) => record.sspId === userId);
 
   const getAllRecords = () => records;
 
-  const refresh = async () => {
-    await load();
-  };
-
   return (
-    <RecordsContext.Provider value={{ records, addRecord, getUserRecords, getAllRecords, refresh, loading }}>
+    <RecordsContext.Provider
+      value={{ records, addRecord, getUserRecords, getAllRecords }}
+    >
       {children}
     </RecordsContext.Provider>
   );
 };
 
-export const useRecords = () => {
+export const useRecords = (): RecordsContextType => {
   const context = useContext(RecordsContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useRecords must be used within a RecordsProvider');
   }
   return context;
