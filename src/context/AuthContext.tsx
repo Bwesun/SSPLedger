@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error('Failed to parse user from localStorage:', err);
-      localStorage.removeItem('user'); // Clean up bad data
+      localStorage.removeItem('user');
     }
   }, []);
 

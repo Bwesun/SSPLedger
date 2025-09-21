@@ -1,5 +1,7 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+
+// Ledger record shape
 export interface LedgerRecord {
   id: string;
   sspId: string;
@@ -18,108 +20,102 @@ export interface LedgerRecord {
   remarks: string;
   createdAt: string;
 }
+
 interface RecordsContextType {
   records: LedgerRecord[];
-  addRecord: (record: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => void;
+  addRecord: (
+    record: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>
+  ) => Promise<void>;
   getUserRecords: (userId: string) => LedgerRecord[];
   getAllRecords: () => LedgerRecord[];
 }
+
 const API_URL = 'http://localhost:3001/api';
 const token = localStorage.getItem('token');
-console.log('Records Token: ', token)
+console.log('Records Token: ', token);
 
 const RecordsContext = createContext<RecordsContextType | undefined>(undefined);
 
-export const RecordsProvider: React.FC<{
-  children: React.ReactNode;
-}> = ({
+export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
   const [records, setRecords] = useState<LedgerRecord[]>([]);
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') {
-        fetchAllRecords();
-      } else {
-        fetchUserRecords();
-      }
+    if (!user) return;
+    if (user.role === 'admin') {
+      fetchAllRecords();
+    } else {
+      fetchUserRecords();
     }
   }, [user]);
 
   const fetchUserRecords = async () => {
-    if (user?.role === 'ssp') {
-      const response = await fetch(`${API_URL}/records`, {
-        method: 'GET', // or 'POST', 'PUT', etc. depending on your use case
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      console.log('Fetch Record request: ',response);
-      const data = await response.json();
-      setRecords(data);
-    }
+    if (user?.role !== 'ssp') return;
+    const response = await fetch(`${API_URL}/records`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    setRecords(data);
   };
 
   const fetchAllRecords = async () => {
-    if (user?.role === 'admin') {
-      const response = await fetch(`${API_URL}/admin/records`, {
-        method: 'GET', // or 'POST', 'PUT', etc. depending on your use case
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      setRecords(data);
-    }
+    if (user?.role !== 'admin') return;
+    const response = await fetch(`${API_URL}/admin/records`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    setRecords(data);
   };
 
-  const addRecord = async (recordData: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => {
+  const addRecord = async (
+    recordData: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>
+  ) => {
     if (!user) return;
     console.log('Before Sending recordData: ', recordData);
-    const add = await fetch(`${API_URL}/records`, {
+    const response = await fetch(`${API_URL}/records`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({
         ...recordData,
-        sspName: user.name,
+        sspName: user.name
       })
     });
 
-    console.log('Add Record request: ',add);
+    console.log('Add Record request: ', response);
+    if (response.ok) {
+      const newRecord = await response.json();
+      setRecords((prev) => [...prev, newRecord]);
+    }
   };
 
-  const getUserRecords = (userId: string) => {
-    // This can be adapted if needed, but fetching is now role-based
-    return records.filter(record => record.sspId === userId);
-  };
+  const getUserRecords = (userId: string) =>
+    records.filter((record) => record.sspId === userId);
 
-  const getAllRecords = () => {
-    // This can be adapted if needed, but fetching is now role-based
-    return records;
-  };
+  const getAllRecords = () => records;
 
-  return <RecordsContext.Provider value={{
-    records,
-    addRecord,
-    getUserRecords,
-    getAllRecords
-  }}>
+  return (
+    <RecordsContext.Provider
+      value={{ records, addRecord, getUserRecords, getAllRecords }}
+    >
       {children}
-    </RecordsContext.Provider>;
+    </RecordsContext.Provider>
+  );
 };
-export const useRecords = () => {
+
+export const useRecords = (): RecordsContextType => {
   const context = useContext(RecordsContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useRecords must be used within a RecordsProvider');
   }
   return context;
