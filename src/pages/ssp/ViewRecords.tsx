@@ -1,11 +1,8 @@
 import React, { useMemo, useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useRecords } from '../../context/RecordsContext';
+import { useRecords, LedgerRecord } from '../../context/RecordsContext';
 import { DownloadIcon, FileTextIcon, PlusIcon } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
-// import { PlusIcon, DownloadIcon, FileTextIcon } from 'lucide-react';
-// import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
 const ViewRecords: React.FC = () => {
   const {
     user
@@ -15,7 +12,7 @@ const ViewRecords: React.FC = () => {
   } = useRecords();
   // const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<string>('serviceDate');
+  const [sortField, setSortField] = useState<keyof LedgerRecord>('serviceDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const records = useMemo(() => {
     if (!user) return [];
@@ -29,8 +26,8 @@ const ViewRecords: React.FC = () => {
   }, [records, searchTerm]);
   const sortedRecords = useMemo(() => {
     return [...filteredRecords].sort((a, b) => {
-      const aValue = a[sortField as keyof typeof a];
-      const bValue = b[sortField as keyof typeof b];
+      const aValue = a[sortField];
+      const bValue = b[sortField];
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
       }
@@ -43,7 +40,7 @@ const ViewRecords: React.FC = () => {
       return 0;
     });
   }, [filteredRecords, sortField, sortDirection]);
-  const handleSort = (field: string) => {
+  const handleSort = (field: keyof LedgerRecord) => {
     if (field === sortField) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {

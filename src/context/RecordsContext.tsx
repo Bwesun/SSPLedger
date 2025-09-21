@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext, useEffect } from 'react';
+import React, { useState, createContext, useContext, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 export interface LedgerRecord {
   id: string;
@@ -20,9 +20,11 @@ export interface LedgerRecord {
 }
 interface RecordsContextType {
   records: LedgerRecord[];
-  addRecord: (record: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => void;
+  addRecord: (record: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => Promise<void>;
   getUserRecords: (userId: string) => LedgerRecord[];
   getAllRecords: () => LedgerRecord[];
+  refresh: () => Promise<void>;
+  loading: boolean;
 }
 const API_URL = 'http://localhost:3001/api';
 const token = localStorage.getItem('token');
@@ -36,9 +38,54 @@ export const RecordsProvider: React.FC<{
   children
 }) => {
   const [records, setRecords] = useState<LedgerRecord[]>([]);
+  const [loading, setLoading] = useState(false);
   const {
     user
   } = useAuth();
+
+  const fetchUserRecords = useCallback(async () => {
+    if (user?.role === 'ssp') {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/records`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        console.log('Fetch Record request: ',response);
+        const data = await response.json();
+        setRecords(data);
+      } catch (error) {
+        console.error('Error fetching user records:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [user?.role]);
+
+  const fetchAllRecords = useCallback(async () => {
+    if (user?.role === 'admin') {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/admin/records`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        setRecords(data);
+      } catch (error) {
+        console.error('Error fetching all records:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     if (user) {
@@ -48,54 +95,32 @@ export const RecordsProvider: React.FC<{
         fetchUserRecords();
       }
     }
-  }, [user]);
-
-  const fetchUserRecords = async () => {
-    if (user?.role === 'ssp') {
-      const response = await fetch(`${API_URL}/records`, {
-        method: 'GET', // or 'POST', 'PUT', etc. depending on your use case
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      console.log('Fetch Record request: ',response);
-      const data = await response.json();
-      setRecords(data);
-    }
-  };
-
-  const fetchAllRecords = async () => {
-    if (user?.role === 'admin') {
-      const response = await fetch(`${API_URL}/admin/records`, {
-        method: 'GET', // or 'POST', 'PUT', etc. depending on your use case
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      setRecords(data);
-    }
-  };
+  }, [user, fetchAllRecords, fetchUserRecords]);
 
   const addRecord = async (recordData: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => {
     if (!user) return;
     console.log('Before Sending recordData: ', recordData);
-    const add = await fetch(`${API_URL}/records`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        ...recordData,
-        sspName: user.name,
-      })
-    });
+    try {
+      const response = await fetch(`${API_URL}/records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...recordData,
+          sspName: user.name,
+        })
+      });
 
-    console.log('Add Record request: ',add);
+      console.log('Add Record request: ', response);
+      if (response.ok) {
+        const newRecord = await response.json();
+        setRecords(prev => [...prev, newRecord]);
+      }
+    } catch (error) {
+      console.error('Error adding record:', error);
+    }
   };
 
   const getUserRecords = (userId: string) => {
@@ -108,11 +133,23 @@ export const RecordsProvider: React.FC<{
     return records;
   };
 
+  const refresh = useCallback(async () => {
+    if (user) {
+      if (user.role === 'admin') {
+        await fetchAllRecords();
+      } else {
+        await fetchUserRecords();
+      }
+    }
+  }, [user, fetchAllRecords, fetchUserRecords]);
+
   return <RecordsContext.Provider value={{
     records,
     addRecord,
     getUserRecords,
-    getAllRecords
+    getAllRecords,
+    refresh,
+    loading
   }}>
       {children}
     </RecordsContext.Provider>;
