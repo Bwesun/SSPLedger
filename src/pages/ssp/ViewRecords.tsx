@@ -18,15 +18,19 @@ const ViewRecords: React.FC = () => {
   const [sortField, setSortField] = useState<string>('serviceDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const records = useMemo(() => {
+    console.log('User in ViewRecords: ', user?.id);
     if (!user) return [];
     return getUserRecords(user.id);
   }, [getUserRecords, user]);
+
+  console.log('Records: ', records);
   const filteredRecords = useMemo(() => {
     return records.filter(record => {
       const searchLower = searchTerm.toLowerCase();
-      return record.farmerName.toLowerCase().includes(searchLower) || record.cropsTreated.toLowerCase().includes(searchLower) || record.productUsed.toLowerCase().includes(searchLower);
+      return record.farmer_name.toLowerCase().includes(searchLower) || record.crops_treated.toLowerCase().includes(searchLower) || record.product_used.toLowerCase().includes(searchLower);
     });
   }, [records, searchTerm]);
+  
   const sortedRecords = useMemo(() => {
     return [...filteredRecords].sort((a, b) => {
       const aValue = a[sortField as keyof typeof a];
@@ -57,6 +61,8 @@ const ViewRecords: React.FC = () => {
   const handleExportToPDF = () => {
     exportToPDF(sortedRecords, `ssp_records_${user?.name.replace(/\s+/g, '_').toLowerCase()}`, user?.name);
   };
+
+  let sn = 1;
   return <div>
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div className="min-w-0 flex-1">
@@ -125,25 +131,25 @@ const ViewRecords: React.FC = () => {
                       <tbody className="divide-y divide-gray-200 bg-white">
                         {sortedRecords.map(record => <tr key={record.id}>
                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                              {record.serialNumber}
+                              {sn++}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {record.farmerName}
+                              {record.farmer_name}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {new Date(record.serviceDate).toLocaleDateString()}
+                              {new Date(record.service_date).toLocaleDateString()}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {record.cropsTreated}
+                              {record.crops_treated}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {record.areaTreated}
+                              {record.area_treated}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {record.serviceCost.toLocaleString()}
+                              {record.service_cost.toLocaleString()}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {record.ppeUsed ? 'Yes' : 'No'}
+                              {record.ppe_used ? 'Yes' : 'No'}
                             </td>
                           </tr>)}
                       </tbody>

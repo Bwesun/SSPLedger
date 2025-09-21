@@ -4,21 +4,21 @@ import { useAuth } from './AuthContext';
 // Ledger record shape
 export interface LedgerRecord {
   id: string;
-  sspId: string;
-  sspName: string;
-  serialNumber: number;
-  farmerName: string;
-  farmerPhone: string;
-  serviceDate: string;
-  cropsTreated: string;
-  productUsed: string;
-  sprayerLoads: number;
-  serviceCost: number;
-  areaTreated: number;
-  ppeUsed: boolean;
+  ssp_id: string;
+  ssp_name: string;
+  serial_number: number;
+  farmer_name: string;
+  farmer_phone: string;
+  service_date: string;
+  crops_treated: string;
+  product_used: string;
+  sprayer_loads: number;
+  service_cost: number;
+  area_treated: number;
+  ppe_used: boolean;
   challenges: string;
   remarks: string;
-  createdAt: string;
+  created_at: string;
 }
 
 interface RecordsContextType {
@@ -99,8 +99,10 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const getUserRecords = (userId: string) =>
-    records.filter((record) => record.sspId === userId);
+  const getUserRecords = (userId: string) => {
+    console.log('Getting records for userId: ', userId);
+    return records.filter((record) => record.ssp_id === userId);
+  };
 
   const getAllRecords = () => records;
 
