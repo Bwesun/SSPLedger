@@ -73,40 +73,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     } catch (error) {
       console.error('Login failed:', error);
-      
-      // Mock login for testing when API is not available
-      if (email === 'john@example.com' && password === 'password') {
-        const mockUser: User = {
-          id: 'mock-ssp-user',
-          name: 'John SSP',
-          email: 'john@example.com',
-          role: 'ssp',
-          phone: '+2348012345678',
-          state: 'Lagos',
-          lga: 'Ikeja',
-          community: 'Allen'
-        };
-        setUser(mockUser);
-        setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        localStorage.setItem('token', 'mock-token');
-        return true;
-      }
-      
-      if (email === 'admin@example.com' && password === 'password') {
-        const mockAdmin: User = {
-          id: 'mock-admin-user',
-          name: 'Admin User',
-          email: 'admin@example.com',
-          role: 'admin'
-        };
-        setUser(mockAdmin);
-        setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(mockAdmin));
-        localStorage.setItem('token', 'mock-admin-token');
-        return true;
-      }
-      
       return false;
     }
   };
