@@ -25,6 +25,8 @@ interface RecordsContextType {
   getAllRecords: () => LedgerRecord[];
 }
 const API_URL = 'http://localhost:3001/api';
+const token = localStorage.getItem('token');
+console.log('Records Token: ', token)
 
 const RecordsContext = createContext<RecordsContextType | undefined>(undefined);
 
@@ -50,7 +52,15 @@ export const RecordsProvider: React.FC<{
 
   const fetchUserRecords = async () => {
     if (user?.role === 'ssp') {
-      const response = await fetch(`${API_URL}/records`);
+      const response = await fetch(`${API_URL}/records`, {
+        method: 'GET', // or 'POST', 'PUT', etc. depending on your use case
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('Fetch Record request: ',response);
       const data = await response.json();
       setRecords(data);
     }
@@ -58,7 +68,13 @@ export const RecordsProvider: React.FC<{
 
   const fetchAllRecords = async () => {
     if (user?.role === 'admin') {
-      const response = await fetch(`${API_URL}/admin/records`);
+      const response = await fetch(`${API_URL}/admin/records`, {
+        method: 'GET', // or 'POST', 'PUT', etc. depending on your use case
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setRecords(data);
     }
@@ -66,16 +82,20 @@ export const RecordsProvider: React.FC<{
 
   const addRecord = async (recordData: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>) => {
     if (!user) return;
-    await fetch(`${API_URL}/records`, {
+    console.log('Before Sending recordData: ', recordData);
+    const add = await fetch(`${API_URL}/records`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
         ...recordData,
-        sspName: user.name
+        sspName: user.name,
       })
     });
+
+    console.log('Add Record request: ',add);
   };
 
   const getUserRecords = (userId: string) => {

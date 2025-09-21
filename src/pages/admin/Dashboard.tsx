@@ -5,6 +5,9 @@ import { FileTextIcon, UsersIcon, CropIcon, DollarSignIcon } from 'lucide-react'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 const API_URL = 'http://localhost:3001/api';
+const token = localStorage.getItem('token');
+console.log('Admin Dashboard Token: ', token)
+
 
 const Dashboard: React.FC = () => {
   const {
@@ -23,7 +26,14 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const response = await fetch(`${API_URL}/admin/dashboard`);
+      const response = await fetch(`${API_URL}/admin/dashboard`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
       const data = await response.json();
       setDashboardData(data);
     };

@@ -1,4 +1,4 @@
-import React from 'react';
+import { ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 // Auth Pages
@@ -15,17 +15,24 @@ import AdminUserManagement from './pages/admin/UserManagement';
 import AdminRecordManagement from './pages/admin/RecordManagement';
 // Layout
 import Layout from './components/Layout';
+
 export function AppRouter() {
-  return <BrowserRouter>
+  return (
+    <BrowserRouter future={{ v7_startTransition: true }}>
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Protected SSP Routes */}
-        <Route path="/ssp" element={<ProtectedRoute role="ssp">
+        <Route
+          path="/ssp"
+          element={
+            <ProtectedRoute role="ssp">
               <Layout />
-            </ProtectedRoute>}>
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<SSPDashboard />} />
           <Route path="add-record" element={<SSPAddRecord />} />
           <Route path="records" element={<SSPViewRecords />} />
@@ -33,9 +40,14 @@ export function AppRouter() {
         </Route>
 
         {/* Protected Admin Routes */}
-        <Route path="/admin" element={<ProtectedRoute role="admin">
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="admin">
               <Layout />
-            </ProtectedRoute>}>
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUserManagement />} />
           <Route path="records" element={<AdminRecordManagement />} />
@@ -44,22 +56,26 @@ export function AppRouter() {
         {/* Redirect to login if not authenticated */}
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
-    </BrowserRouter>;
+    </BrowserRouter>
+  );
 }
-// Protected route component
-function ProtectedRoute({
-  children,
-  role
-}) {
-  const {
-    user,
-    isAuthenticated
-  } = useAuth();
+
+// ✅ Type-safe ProtectedRoute component
+interface ProtectedRouteProps {
+  children: ReactNode;
+  role?: 'ssp' | 'admin';
+}
+
+function ProtectedRoute({ children, role }: ProtectedRouteProps) {
+  const { user, isAuthenticated } = useAuth();
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  if (role && user.role !== role) {
-    return <Navigate to={user.role === 'admin' ? '/admin' : '/ssp'} replace />;
+
+  if (role && user?.role !== role) {
+    return <Navigate to={user?.role === 'admin' ? '/admin' : '/ssp'} replace />;
   }
-  return children;
+
+  return <>{children}</>;
 }

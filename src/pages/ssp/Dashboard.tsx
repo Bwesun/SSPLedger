@@ -5,6 +5,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { FileTextIcon, SprayCanIcon, CropIcon, DollarSignIcon } from 'lucide-react';
 
 const API_URL = 'http://localhost:3001/api';
+const token = localStorage.getItem('token');
+console.log('SSP Dashboard Token: ', token)
 
 const Dashboard: React.FC = () => {
   const {
@@ -18,12 +20,18 @@ const Dashboard: React.FC = () => {
     totalAreaTreated: 0,
     totalServiceCost: 0,
     uniqueCrops: 0,
-    recentRecords: []
+    recentRecords: [] as any [],
   });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const response = await fetch(`${API_URL}/ssp/dashboard`);
+      const response = await fetch(`${API_URL}/ssp/dashboard`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setDashboardData(data);
     };
@@ -31,10 +39,12 @@ const Dashboard: React.FC = () => {
   }, [records]);
 
   const chartData = dashboardData.recentRecords.map((record: any) => ({
-    name: record.farmerName,
-    areaTreated: record.areaTreated,
-    serviceCost: record.serviceCost / 1000,
+    name: record.farmer_name,
+    areaTreated: record.area_treated,
+    serviceCost: record.service_cost / 1000,
   }));
+  console.log('Chart Data: ', chartData);
+  console.log('Dashboard Data: ', dashboardData);
   return <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -175,19 +185,19 @@ const Dashboard: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {dashboardData.recentRecords.map((record: any) => <tr key={record.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {record.farmerName}
+                      {record.farmer_name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(record.serviceDate).toLocaleDateString()}
+                      {new Date(record.service_date).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {record.cropsTreated}
+                      {record.crops_treated}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {record.areaTreated}
+                      {record.area_treated}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {record.serviceCost.toLocaleString()}
+                      {record.service_cost}
                     </td>
                   </tr>)}
               </tbody>
