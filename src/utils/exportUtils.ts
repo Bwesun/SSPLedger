@@ -8,17 +8,17 @@ export const exportToExcel = (
 ) => {
   const worksheet = XLSX.utils.json_to_sheet(
     records.map((record) => ({
-      'Serial Number': record.serialNumber,
-      'SSP Name': record.sspName,
-      'Farmer Name': record.farmerName,
-      'Farmer Phone': record.farmerPhone,
-      'Service Date': new Date(record.serviceDate).toLocaleDateString(),
-      'Crops Treated': record.cropsTreated,
-      'Product Used': record.productUsed,
-      'Sprayer Loads': record.sprayerLoads,
-      'Service Cost (₦)': record.serviceCost,
-      'Area Treated (Ha)': record.areaTreated,
-      'PPE Used': record.ppeUsed ? 'Yes' : 'No',
+      'Serial Number': record.serial_number,
+      'SSP Name': record.ssp_name,
+      'Farmer Name': record.farmer_name,
+      'Farmer Phone': record.farmer_phone,
+      'Service Date': new Date(record.service_date).toLocaleDateString(),
+      'Crops Treated': record.crops_treated,
+      'Product Used': record.product_used,
+      'Sprayer Loads': record.sprayer_loads,
+      'Service Cost (₦)': record.service_cost,
+      'Area Treated (Ha)': record.area_treated,
+      'PPE Used': record.ppe_used ? 'Yes' : 'No',
       Challenges: record.challenges,
       Remarks: record.remarks,
     })),
@@ -46,7 +46,7 @@ export const exportToPDF = (
   doc.setFontSize(11)
   doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, y + 8)
   if (sspFilter && records.length > 0) {
-    const sspRecord = records.find((record) => record.sspName === sspFilter)
+    const sspRecord = records.find((record) => record.ssp_name === sspFilter)
     if (sspRecord) {
       y += 20
       doc.setFillColor(230, 230, 230)
@@ -54,8 +54,8 @@ export const exportToPDF = (
       doc.setFontSize(14)
       doc.text('SSP Information', 14, y + 7)
       doc.setFontSize(11)
-      doc.text(`Name: ${sspRecord.sspName}`, 14, y + 15)
-      doc.text(`ID: ${sspRecord.sspId}`, 120, y + 15)
+      doc.text(`Name: ${sspRecord.ssp_name}`, 14, y + 15)
+      doc.text(`ID: ${sspRecord.ssp_id}`, 120, y + 15)
       y += 25
     }
   }
@@ -88,26 +88,28 @@ export const exportToPDF = (
   y += 8
   doc.setTextColor(0, 0, 0)
 
+  let sn = 1; // Serial number counter
+
   records.forEach((record, index) => {
     // Prepare row data
     const rowData = [
-      record.serialNumber.toString(),
-      record.sspName,
-      record.farmerName,
-      record.farmerPhone,
-      new Date(record.serviceDate).toLocaleDateString(),
-      record.cropsTreated,
-      record.productUsed,
-      record.sprayerLoads.toString(),
-      record.areaTreated.toString(),
-      record.serviceCost.toLocaleString(),
-      record.ppeUsed ? 'Yes' : 'No',
+      sn++, // Increment serial number
+      record.ssp_name,
+      record.farmer_name,
+      record.farmer_phone,
+      new Date(record.service_date).toLocaleDateString(),
+      record.crops_treated,
+      record.product_used,
+      record.sprayer_loads.toString(),
+      record.area_treated.toString(),
+      record.service_cost.toLocaleString(),
+      record.ppe_used ? 'Yes' : 'No',
       record.challenges || 'None',
       record.remarks || 'None',
     ]
     // Wrap each cell's text
     const wrappedCells = rowData.map((cell, i) =>
-      doc.splitTextToSize(cell, colWidths[i] - 4),
+      doc.splitTextToSize(cell as string, colWidths[i] - 4),
     )
     // Find max number of lines in this row
     const maxLines = Math.max(...wrappedCells.map((lines) => lines.length))

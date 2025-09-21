@@ -10,6 +10,20 @@ const Login: React.FC = () => {
     login
   } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      if (parsedUser.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/ssp');
+      }
+    }
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
