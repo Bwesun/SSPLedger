@@ -110,6 +110,9 @@ const Dashboard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [records]);
 
+  console.log('Records in Admin Dashboard: ', dashboardData);
+  console.log('Recent Records: ', dashboardData.recentRecords);
+
   // Simple helpers to derive chart-ready data when backend does not supply them
   function deriveCropDistribution(src: any[]): any[] {
     if (!Array.isArray(src) || src.length === 0) return [];
@@ -131,6 +134,7 @@ const Dashboard: React.FC = () => {
       months[key].areaTreated += Number(r.areaTreated ?? 0);
       months[key].serviceCost += Number(r.serviceCost ?? 0);
     });
+    console.log('Derived Monthly Data: ', months);
     return Object.values(months);
   }
 
@@ -144,6 +148,7 @@ const Dashboard: React.FC = () => {
       map[ssp].revenue += Number(r.serviceCost ?? 0);
       map[ssp].area += Number(r.areaTreated ?? 0);
     });
+    // console.log('SSP Performance Map: ', map);
     return Object.values(map);
   }
 
@@ -304,10 +309,10 @@ const Dashboard: React.FC = () => {
             dashboardData.recentRecords.map((r, i) => (
               <div key={r.id ?? i} className="flex justify-between items-center border-b py-2">
                 <div>
-                  <div className="font-medium">{r.farmerName ?? r.sspName ?? 'Unknown'}</div>
-                  <div className="text-xs text-gray-500">{r.cropsTreated ?? '—'}</div>
+                  <div className="font-medium">{r.farmer_name ?? r.sspName ?? 'Unknown'}</div>
+                  <div className="text-xs text-gray-500">{r.crops_treated ?? '—'}</div>
                 </div>
-                <div className="text-sm text-gray-700">{r.serviceDate ? new Date(r.serviceDate).toLocaleDateString() : '—'}</div>
+                <div className="text-sm text-gray-700">{r.service_date ? new Date(r.service_date).toLocaleDateString() : '—'}</div>
               </div>
             ))
           )}
