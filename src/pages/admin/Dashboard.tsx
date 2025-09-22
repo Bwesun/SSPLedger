@@ -1,23 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { useRecords } from '../../context/RecordsContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import { FileTextIcon, UsersIcon, CropIcon, DollarSignIcon } from 'lucide-react';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 const API_URL = 'http://localhost:3001/api';
-const token = localStorage.getItem('token');
-console.log('Admin Dashboard Token: ', token)
 
+type RecentRecord = {
+  id?: string;
+  serialNumber?: number;
+  sspName?: string;
+  farmerName?: string;
+  serviceDate?: string;
+  cropsTreated?: string;
+  areaTreated?: number;
+  serviceCost?: number;
+  ppeUsed?: boolean;
+  [key: string]: any;
+};
+
+type DashboardState = {
+  totalRecords: number;
+  totalAreaTreated: number;
+  totalServiceCost: number;
+  totalSsp: number;
+  totalUsers?: number;
+  recentRecords: RecentRecord[];
+  cropData: any[];
+  monthlyData: any[];
+  sspData: any[];
+};
 
 const Dashboard: React.FC = () => {
-  const {
-    records
-  } = useRecords();
-  const [dashboardData, setDashboardData] = useState({
+  const { records } = useRecords();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  const [dashboardData, setDashboardData] = useState<DashboardState>({
     totalRecords: 0,
     totalAreaTreated: 0,
     totalServiceCost: 0,
     totalSsp: 0,
+    totalUsers: 0,
     recentRecords: [],
     cropData: [],
     monthlyData: [],
@@ -26,27 +61,99 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const response = await fetch(`${API_URL}/admin/dashboard`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      try {
+        const res = await fetch(`${API_URL}/admin/dashboard`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        });
+        if (!res.ok) {
+          console.error('Failed to fetch dashboard:', res.statusText);
+          return;
         }
-      });
+        const data = await res.json();
 
-      const data = await response.json();
-      setDashboardData(data);
+        // Backend response shape (example):
+        // {
+        //   totalUsers,
+        //   totalSsp,
+        //   totalRecords,
+        //   totalServiceCost,
+        //   totalAreaTreated,
+        //   recentRecords: [...]
+        //   // optional: monthlyData, cropData, sspData
+        // }
+
+        setDashboardData((prev) => ({
+          ...prev,
+          totalRecords: data.totalRecords ?? prev.totalRecords,
+          totalAreaTreated: data.totalAreaTreated ?? prev.totalAreaTreated,
+          totalServiceCost: data.totalServiceCost ?? prev.totalServiceCost,
+          totalSsp: data.totalSsp ?? prev.totalSsp,
+          totalUsers: data.totalUsers ?? prev.totalUsers,
+          recentRecords: Array.isArray(data.recentRecords) ? data.recentRecords : prev.recentRecords,
+          // If backend provides chart data, use it; otherwise try to derive minimal datasets
+          monthlyData: Array.isArray(data.monthlyData)
+            ? data.monthlyData
+            : deriveMonthlyFromRecords(data.recentRecords ?? records),
+          cropData: Array.isArray(data.cropData) ? data.cropData : deriveCropDistribution(data.recentRecords ?? records),
+          sspData: Array.isArray(data.sspData) ? data.sspData : deriveSspPerformance(data.recentRecords ?? records),
+        }));
+      } catch (err) {
+        console.error('Error fetching dashboard data', err);
+      }
     };
+
     fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [records]);
-  return <div className="space-y-6">
+
+  // Simple helpers to derive chart-ready data when backend does not supply them
+  function deriveCropDistribution(src: any[]): any[] {
+    if (!Array.isArray(src) || src.length === 0) return [];
+    const counts: Record<string, number> = {};
+    src.forEach((r) => {
+      const crop = (r.cropsTreated || 'Unknown').toString();
+      counts[crop] = (counts[crop] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }
+
+  function deriveMonthlyFromRecords(src: any[]): any[] {
+    if (!Array.isArray(src) || src.length === 0) return [];
+    const months: Record<string, { name: string; areaTreated: number; serviceCost: number }> = {};
+    src.forEach((r) => {
+      const d = r.serviceDate ? new Date(r.serviceDate) : new Date();
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      if (!months[key]) months[key] = { name: d.toLocaleString('default', { month: 'short', year: 'numeric' }), areaTreated: 0, serviceCost: 0 };
+      months[key].areaTreated += Number(r.areaTreated ?? 0);
+      months[key].serviceCost += Number(r.serviceCost ?? 0);
+    });
+    return Object.values(months);
+  }
+
+  function deriveSspPerformance(src: any[]): any[] {
+    if (!Array.isArray(src) || src.length === 0) return [];
+    const map: Record<string, { name: string; records: number; revenue: number; area: number }> = {};
+    src.forEach((r) => {
+      const ssp = r.sspName ?? 'Unknown';
+      if (!map[ssp]) map[ssp] = { name: ssp, records: 0, revenue: 0, area: 0 };
+      map[ssp].records += 1;
+      map[ssp].revenue += Number(r.serviceCost ?? 0);
+      map[ssp].area += Number(r.areaTreated ?? 0);
+    });
+    return Object.values(map);
+  }
+
+  return (
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Overview of all SSP activities
-        </p>
+        <p className="mt-1 text-sm text-gray-500">Overview of all SSP activities</p>
       </div>
-      {/* Stats */}
+
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -56,17 +163,14 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Records
-                  </dt>
-                  <dd className="text-xl font-semibold text-gray-900">
-                    {dashboardData.totalRecords}
-                  </dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Total Records</dt>
+                  <dd className="text-xl font-semibold text-gray-900">{dashboardData.totalRecords}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
+
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -75,17 +179,14 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Active SSPs
-                  </dt>
-                  <dd className="text-xl font-semibold text-gray-900">
-                    {dashboardData.totalSsp}
-                  </dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Active SSPs</dt>
+                  <dd className="text-xl font-semibold text-gray-900">{dashboardData.totalSsp}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
+
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -94,17 +195,16 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Area Treated (Ha)
-                  </dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Area Treated (Ha)</dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {dashboardData.totalAreaTreated.toFixed(2)}
+                    {(dashboardData.totalAreaTreated ?? 0).toFixed(2)}
                   </dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
+
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -113,11 +213,9 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Revenue (₦)
-                  </dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue (₦)</dt>
                   <dd className="text-xl font-semibold text-gray-900">
-                    {dashboardData.totalServiceCost.toLocaleString()}
+                    {(dashboardData.totalServiceCost ?? 0).toLocaleString()}
                   </dd>
                 </dl>
               </div>
@@ -125,21 +223,14 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
       {/* Charts */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {/* Monthly Service Cost */}
         <div className="bg-white p-6 shadow rounded-lg">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Monthly Activity
-          </h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Monthly Activity</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dashboardData.monthlyData} margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5
-            }}>
+              <BarChart data={dashboardData.monthlyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis yAxisId="left" />
@@ -147,24 +238,30 @@ const Dashboard: React.FC = () => {
                 <Tooltip />
                 <Legend />
                 <Bar yAxisId="left" dataKey="areaTreated" name="Area Treated (Ha)" fill="#8884d8" />
-                <Bar yAxisId="right" dataKey="serviceCost" name="Service Cost (₦'000)" fill="#82ca9d" />
+                <Bar yAxisId="right" dataKey="serviceCost" name="Service Cost (₦)" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-        {/* Crop Distribution */}
+
         <div className="bg-white p-6 shadow rounded-lg">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Crop Distribution
-          </h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Crop Distribution</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={dashboardData.cropData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({
-                name,
-                percent
-              }) => `${name}: ${(percent * 100).toFixed(0)}%`}>
-                  {dashboardData.cropData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                <Pie
+                  data={dashboardData.cropData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {dashboardData.cropData.map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
                 </Pie>
                 <Tooltip />
                 <Legend />
@@ -173,6 +270,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
       {/* SSP Performance */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:px-6">
@@ -181,25 +279,42 @@ const Dashboard: React.FC = () => {
         <div className="border-t border-gray-200">
           <div className="h-64 p-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dashboardData.sspData} margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5
-            }} layout="vertical">
+              <BarChart data={dashboardData.sspData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
                 <YAxis dataKey="name" type="category" width={100} />
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="records" name="Records" fill="#8884d8" />
-                <Bar dataKey="revenue" name="Revenue (₦'000)" fill="#82ca9d" />
+                <Bar dataKey="revenue" name="Revenue (₦)" fill="#82ca9d" />
                 <Bar dataKey="area" name="Area (Ha)" fill="#ffc658" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
-    </div>;
+
+      {/* Recent records preview */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-lg font-medium mb-3">Recent Records</h3>
+        <div className="space-y-2">
+          {dashboardData.recentRecords.length === 0 ? (
+            <p className="text-sm text-gray-500">No recent records.</p>
+          ) : (
+            dashboardData.recentRecords.map((r, i) => (
+              <div key={r.id ?? i} className="flex justify-between items-center border-b py-2">
+                <div>
+                  <div className="font-medium">{r.farmerName ?? r.sspName ?? 'Unknown'}</div>
+                  <div className="text-xs text-gray-500">{r.cropsTreated ?? '—'}</div>
+                </div>
+                <div className="text-sm text-gray-700">{r.serviceDate ? new Date(r.serviceDate).toLocaleDateString() : '—'}</div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
+
 export default Dashboard;

@@ -6,7 +6,7 @@ import { FileTextIcon, SprayCanIcon, CropIcon, DollarSignIcon } from 'lucide-rea
 
 const API_URL = 'http://localhost:3001/api';
 const token = localStorage.getItem('token');
-console.log('SSP Dashboard Token: ', token)
+// console.log('SSP Dashboard Token: ', token)
 
 const Dashboard: React.FC = () => {
   const {
@@ -22,6 +22,8 @@ const Dashboard: React.FC = () => {
     uniqueCrops: 0,
     recentRecords: [] as any [],
   });
+
+  console.log('Records in Dashboard: ', records);
 
   useEffect(() => {
     const fetchDashboardData = async () => {

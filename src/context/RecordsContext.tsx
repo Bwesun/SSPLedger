@@ -32,7 +32,6 @@ interface RecordsContextType {
 
 const API_URL = 'http://localhost:3001/api';
 const token = localStorage.getItem('token');
-console.log('Records Token: ', token);
 
 const RecordsContext = createContext<RecordsContextType | undefined>(undefined);
 
@@ -63,6 +62,7 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
     setRecords(data);
   };
 
+  // Admin fetch all records
   const fetchAllRecords = async () => {
     if (user?.role !== 'admin') return;
     const response = await fetch(`${API_URL}/admin/records`, {
@@ -72,6 +72,7 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     });
     const data = await response.json();
+    // console.log('All Records fetched: ', data);
     setRecords(data);
   };
 
@@ -99,11 +100,12 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Function to get records for a specific user
   const getUserRecords = (userId: string) => {
-    console.log('Getting records for userId: ', userId);
     return records.filter((record) => record.ssp_id === userId);
   };
 
+  // Function to get all records
   const getAllRecords = () => records;
 
   return (
@@ -115,6 +117,7 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
+// Custom hook to use the RecordsContext
 export const useRecords = (): RecordsContextType => {
   const context = useContext(RecordsContext);
   if (!context) {
