@@ -7,17 +7,17 @@ const RecordManagement: React.FC = () => {
     records
   } = useRecords();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<keyof LedgerRecord>('serviceDate');
+  const [sortField, setSortField] = useState<keyof LedgerRecord>('service_date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterSSP, setFilterSSP] = useState<string>('');
 
   // Get unique SSPs for filter
-  const uniqueSSPs = [...new Set(records.map(record => record.sspName))];
+  const uniqueSSPs = [...new Set(records.map(record => record.ssp_name))];
   // Filter and sort records
   const filteredRecords = records.filter(record => {
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = record.farmerName.toLowerCase().includes(searchLower) || record.cropsTreated.toLowerCase().includes(searchLower) || record.productUsed.toLowerCase().includes(searchLower);
-    const matchesSSP = filterSSP ? record.sspName === filterSSP : true;
+    const matchesSearch = record.farmer_name.toLowerCase().includes(searchLower) || record.crops_treated.toLowerCase().includes(searchLower) || record.product_used.toLowerCase().includes(searchLower);
+    const matchesSSP = filterSSP ? record.ssp_name === filterSSP : true;
     return matchesSearch && matchesSSP;
   }).sort((a, b) => {
     const aValue = a[sortField];
@@ -49,6 +49,10 @@ const RecordManagement: React.FC = () => {
     const fileName = filterSSP ? `ssp_records_${filterSSP.replace(/\s+/g, '_').toLowerCase()}` : 'ssp_records';
     exportToPDF(filteredRecords, fileName, filterSSP);
   };
+
+  // Numbering counter
+  let sn = 1;
+
   return <div>
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div className="min-w-0 flex-1">
@@ -94,28 +98,28 @@ const RecordManagement: React.FC = () => {
                   <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer" onClick={() => handleSort('serialNumber')}>
+                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer" onClick={() => handleSort('serial_number')}>
                           S/N
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('sspName')}>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('ssp_name')}>
                           SSP Name
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('farmerName')}>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('farmer_name')}>
                           Farmer's Name
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('serviceDate')}>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('service_date')}>
                           Date
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('cropsTreated')}>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('crops_treated')}>
                           Crop
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('areaTreated')}>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('area_treated')}>
                           Area (Ha)
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('serviceCost')}>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('service_cost')}>
                           Cost (₦)
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('ppeUsed')}>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('ppe_used')}>
                           PPE Used
                         </th>
                       </tr>
@@ -123,28 +127,28 @@ const RecordManagement: React.FC = () => {
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {filteredRecords.map(record => <tr key={record.id}>
                           <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                            {record.serialNumber}
+                            {sn++}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.sspName}
+                            {record.farmer_name}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.farmerName}
+                            {record.farmer_name}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {new Date(record.serviceDate).toLocaleDateString()}
+                            {new Date(record.service_date).toLocaleDateString()}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.cropsTreated}
+                            {record.crops_treated}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.areaTreated}
+                            {record.area_treated}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.serviceCost.toLocaleString()}
+                            {record.service_cost.toLocaleString()}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.ppeUsed ? 'Yes' : 'No'}
+                            {record.ppe_used ? 'Yes' : 'No'}
                           </td>
                         </tr>)}
                     </tbody>

@@ -13,6 +13,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import Logo from '../../assets/logo.png';
 import { FileTextIcon, UsersIcon, CropIcon, DollarSignIcon } from 'lucide-react';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
@@ -98,8 +99,6 @@ const Dashboard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [records]);
 
-  console.log('Records in Admin Dashboard: ', dashboardData);
-  console.log('Recent Records: ', dashboardData.recentRecords);
 
   // Simple helpers to derive chart-ready data when backend does not supply them
   function deriveCropDistribution(src: any[]): any[] {
@@ -123,7 +122,6 @@ const Dashboard: React.FC = () => {
       months[key].area_treated += Number(r.area_treated ?? 0);
       months[key].service_cost += Number(r.service_cost ?? 0);
     });
-    console.log('Derived Monthly Data: ', months);
     return Object.values(months);
   }
 
@@ -141,11 +139,20 @@ const Dashboard: React.FC = () => {
     return Object.values(map);
   }
 
+  // Serial Numbering
+  let sn = 1;
+
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Overview of all SSP activities</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <img src={Logo} alt="Logo" className="h-24 w-24 mr-4 object-contain" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-500">Overview of all SSP activities</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -173,7 +180,7 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active SSPs</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Registered SSPs</dt>
                   <dd className="text-xl font-semibold text-gray-900">{dashboardData.totalSsp}</dd>
                 </dl>
               </div>
@@ -291,19 +298,66 @@ const Dashboard: React.FC = () => {
       {/* Recent records preview */}
       <div className="bg-white rounded-lg shadow p-4">
         <h3 className="text-lg font-medium mb-3">Recent Records</h3>
-        <div className="space-y-2">
+
+        <div className="overflow-x-auto">
           {dashboardData.recentRecords.length === 0 ? (
             <p className="text-sm text-gray-500">No recent records.</p>
           ) : (
-            dashboardData.recentRecords.map((r, i) => (
-              <div key={r.id ?? i} className="flex justify-between items-center border-b py-2">
-                <div>
-                  <div className="font-medium">{r.farmer_name ?? r.sspName ?? 'Unknown'}</div>
-                  <div className="text-xs text-gray-500">{r.crops_treated ?? '—'}</div>
-                </div>
-                <div className="text-sm text-gray-700">{r.service_date ? new Date(r.service_date).toLocaleDateString() : '—'}</div>
-              </div>
-            ))
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SSP</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Farmer</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crop</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Area (Ha)</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Cost (₦)</th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">PPE</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {dashboardData.recentRecords.map((r, i) => {
+                  let serial = 1;
+                  const ssp = r.farmer_name ?? r.sspName ?? 'Unknown SSP';
+                  console.log('SSP Name:', ssp);
+                  const farmer = r.farmerName ?? r.farmer_name ?? 'Unknown';
+                  const phone = r.farmerPhone ?? r.farmer_phone ?? '—';
+                  const date = r.serviceDate ?? r.service_date ?? null;
+                  const crop = r.cropsTreated ?? r.crops_treated ?? '—';
+                  const area = Number(r.areaTreated ?? r.area_treated ?? 0);
+                  const cost = Number(r.serviceCost ?? r.service_cost ?? 0);
+                  const ppe = typeof r.ppeUsed !== 'undefined' ? (r.ppeUsed ?? r.ppe_used) : (r.ppe_used ?? false);
+                  const remarks = r.remarks ?? r.remark ?? r.notes ?? '—';
+                  return (
+                    <tr key={r.id ?? `${serial}-${i}`}>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{sn++}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{ssp}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{farmer}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{phone}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                        {date ? new Date(date).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{crop}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">{area.toFixed(2)}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">{cost.toLocaleString()}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-center">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            ppe ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {ppe ? 'Yes' : 'No'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{remarks}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
       </div>

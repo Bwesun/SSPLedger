@@ -22,8 +22,7 @@ interface AuthContextType {
   updateProfile: (userData: Partial<User>) => Promise<boolean>;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-console.log('API URL:', API_URL);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'; 
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

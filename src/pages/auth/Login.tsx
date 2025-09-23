@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import Logo from '../../assets/logo.png';
 import { useAuth } from '../../context/AuthContext';
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,6 +52,8 @@ const Login: React.FC = () => {
   return <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          {/* Logo: put logo.png in the public/ folder or adjust the src */}
+          <img src={Logo} alt="App Logo" className="mx-auto h-32 w-32 object-contain mb-4" />
           <h1 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             SSP Ledger Book
           </h1>
@@ -67,13 +71,13 @@ const Login: React.FC = () => {
               <label htmlFor="email" className="sr-only">
                 Email address
               </label>
-              <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Email address" />
+              <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm" placeholder="Email address" />
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
                 Password
               </label>
-              <input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Password" />
+              <input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm" placeholder="Password" />
             </div>
           </div>
           <div>
@@ -84,15 +88,10 @@ const Login: React.FC = () => {
           <div className="text-sm text-center">
             <p>
               Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500">
                 Register here
               </Link>
             </p>
-          </div>
-          <div className="text-xs text-center text-gray-500">
-            <p>Demo credentials:</p>
-            <p>Admin: admin@example.com / password</p>
-            <p>SSP: john@example.com / password</p>
           </div>
         </form>
       </div>
