@@ -26,7 +26,7 @@ type RecentRecord = {
   serviceDate?: string;
   cropsTreated?: string;
   area_treated?: number;
-  serviceCost?: number;
+  service_cost?: number;
   ppeUsed?: boolean;
   [key: string]: any;
 };
@@ -126,13 +126,13 @@ const Dashboard: React.FC = () => {
 
   function deriveMonthlyFromRecords(src: any[]): any[] {
     if (!Array.isArray(src) || src.length === 0) return [];
-    const months: Record<string, { name: string; area_treated: number; serviceCost: number }> = {};
+    const months: Record<string, { name: string; area_treated: number; service_cost: number }> = {};
     src.forEach((r) => {
       const d = r.service_date ? new Date(r.service_date) : new Date();
       const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-      if (!months[key]) months[key] = { name: d.toLocaleString('default', { month: 'short', year: 'numeric' }), area_treated: 0, serviceCost: 0 };
+      if (!months[key]) months[key] = { name: d.toLocaleString('default', { month: 'short', year: 'numeric' }), area_treated: 0, service_cost: 0 };
       months[key].area_treated += Number(r.area_treated ?? 0);
-      months[key].serviceCost += Number(r.service_cost ?? 0);
+      months[key].service_cost += Number(r.service_cost ?? 0);
     });
     console.log('Derived Monthly Data: ', months);
     return Object.values(months);
@@ -142,13 +142,14 @@ const Dashboard: React.FC = () => {
     if (!Array.isArray(src) || src.length === 0) return [];
     const map: Record<string, { name: string; records: number; revenue: number; area: number }> = {};
     src.forEach((r) => {
-      const ssp = r.sspName ?? 'Unknown';
+      const ssp = r.farmer_name ?? 'Unknown';
+      console.log('Processing record for SSP:', ssp, r);
       if (!map[ssp]) map[ssp] = { name: ssp, records: 0, revenue: 0, area: 0 };
       map[ssp].records += 1;
       map[ssp].revenue += Number(r.service_cost ?? 0);
       map[ssp].area += Number(r.area_treated ?? 0);
     });
-    // console.log('SSP Performance Map: ', map);
+    console.log('SSP Performance Map: ', map);
     return Object.values(map);
   }
 
@@ -243,7 +244,7 @@ const Dashboard: React.FC = () => {
                 <Tooltip />
                 <Legend />
                 <Bar yAxisId="left" dataKey="area_treated" name="Area Treated (Ha)" fill="#8884d8" />
-                <Bar yAxisId="right" dataKey="serviceCost" name="Service Cost (₦)" fill="#82ca9d" />
+                <Bar yAxisId="right" dataKey="service_cost" name="Service Cost (₦)" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
           </div>
