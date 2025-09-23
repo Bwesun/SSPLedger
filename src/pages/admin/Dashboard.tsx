@@ -118,7 +118,7 @@ const Dashboard: React.FC = () => {
     if (!Array.isArray(src) || src.length === 0) return [];
     const counts: Record<string, number> = {};
     src.forEach((r) => {
-      const crop = (r.cropsTreated || 'Unknown').toString();
+      const crop = (r.crops_treated || 'Unknown').toString();
       counts[crop] = (counts[crop] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -142,11 +142,11 @@ const Dashboard: React.FC = () => {
     if (!Array.isArray(src) || src.length === 0) return [];
     const map: Record<string, { name: string; records: number; revenue: number; area: number }> = {};
     src.forEach((r) => {
-      const ssp = r.sspName ?? 'Unknown';
+      const ssp = r.sspname ?? 'Unknown';
       if (!map[ssp]) map[ssp] = { name: ssp, records: 0, revenue: 0, area: 0 };
       map[ssp].records += 1;
-      map[ssp].revenue += Number(r.serviceCost ?? 0);
-      map[ssp].area += Number(r.areaTreated ?? 0);
+      map[ssp].revenue += Number(r.service_cost ?? 0);
+      map[ssp].area += Number(r.area_treated ?? 0);
     });
     // console.log('SSP Performance Map: ', map);
     return Object.values(map);
@@ -309,7 +309,7 @@ const Dashboard: React.FC = () => {
             dashboardData.recentRecords.map((r, i) => (
               <div key={r.id ?? i} className="flex justify-between items-center border-b py-2">
                 <div>
-                  <div className="font-medium">{r.farmer_name ?? r.sspName ?? 'Unknown'}</div>
+                  <div className="font-medium">{r.farmer_name ?? r.ssp_name ?? 'Unknown'}</div>
                   <div className="text-xs text-gray-500">{r.crops_treated ?? '—'}</div>
                 </div>
                 <div className="text-sm text-gray-700">{r.service_date ? new Date(r.service_date).toLocaleDateString() : '—'}</div>
