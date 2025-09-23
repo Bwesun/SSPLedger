@@ -307,7 +307,7 @@ const Dashboard: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/N</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SSP</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SSP ID</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Farmer</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -321,8 +321,7 @@ const Dashboard: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {dashboardData.recentRecords.map((r, i) => {
                   let serial = 1;
-                  const ssp = r.farmer_name ?? r.sspName ?? 'Unknown SSP';
-                  console.log('SSP Name:', ssp);
+                  const ssp = r.ssp_id ?? r.sspName ?? 'Unknown SSP';
                   const farmer = r.farmerName ?? r.farmer_name ?? 'Unknown';
                   const phone = r.farmerPhone ?? r.farmer_phone ?? '—';
                   const date = r.serviceDate ?? r.service_date ?? null;

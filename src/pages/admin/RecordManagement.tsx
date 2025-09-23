@@ -12,7 +12,8 @@ const RecordManagement: React.FC = () => {
   const [filterSSP, setFilterSSP] = useState<string>('');
 
   // Get unique SSPs for filter
-  const uniqueSSPs = [...new Set(records.map(record => record.ssp_name))];
+  const uniqueSSPs = [...new Set(records.map(record => record.ssp_name))].filter((s) => s !== undefined && s !== null);
+
   // Filter and sort records
   const filteredRecords = records.filter(record => {
     const searchLower = searchTerm.toLowerCase();
@@ -41,10 +42,13 @@ const RecordManagement: React.FC = () => {
       setSortDirection('asc');
     }
   };
+  // Export to Excell
   const handleExportToExcel = () => {
     const fileName = filterSSP ? `ssp_records_${filterSSP.replace(/\s+/g, '_').toLowerCase()}` : 'ssp_records';
     exportToExcel(filteredRecords, fileName);
   };
+
+  // Export to PDF
   const handleExportToPDF = () => {
     const fileName = filterSSP ? `ssp_records_${filterSSP.replace(/\s+/g, '_').toLowerCase()}` : 'ssp_records';
     exportToPDF(filteredRecords, fileName, filterSSP);
@@ -84,9 +88,11 @@ const RecordManagement: React.FC = () => {
             <div className="w-full md:w-64">
               <select id="ssp-filter" name="ssp-filter" className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md" value={filterSSP} onChange={e => setFilterSSP(e.target.value)}>
                 <option value="">All SSPs</option>
-                {uniqueSSPs.map(ssp => <option key={ssp} value={ssp}>
-                    {ssp}
-                  </option>)}
+                {uniqueSSPs.map((ssp, idx) => (
+                  <option key={ssp ?? `ssp-${idx}`} value={ssp ?? ''}>
+                    {ssp ?? `SSP ${idx + 1}`}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -102,7 +108,7 @@ const RecordManagement: React.FC = () => {
                           S/N
                         </th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('ssp_name')}>
-                          SSP Name
+                          SSP ID
                         </th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('farmer_name')}>
                           Farmer's Name
@@ -125,32 +131,34 @@ const RecordManagement: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredRecords.map(record => <tr key={record.id}>
+                      {filteredRecords.map((record, idx) => (
+                        <tr key={record.id ?? `${record.serial_number ?? 'sn'}-${idx}`}>
                           <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                             {sn++}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.farmer_name}
+                            {record.ssp_id ?? '-'}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.farmer_name}
+                            {record.farmer_name ?? '-'}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {new Date(record.service_date).toLocaleDateString()}
+                            {record.service_date ? new Date(record.service_date).toLocaleDateString() : '-'}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.crops_treated}
+                            {record.crops_treated ?? '-'}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.area_treated}
+                            {record.area_treated ?? '-'}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {record.service_cost.toLocaleString()}
+                            {Number(record.service_cost ?? 0).toLocaleString()}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                             {record.ppe_used ? 'Yes' : 'No'}
                           </td>
-                        </tr>)}
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>

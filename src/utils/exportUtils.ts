@@ -61,7 +61,7 @@ export const exportToPDF = (
   }
   const headers = [
     'S/N',
-    'SSP Name',
+    'SSP ID',
     'Farmer',
     'Phone',
     'Date',
@@ -94,7 +94,7 @@ export const exportToPDF = (
     // Prepare row data
     const rowData = [
       sn++, // Increment serial number
-      record.ssp_name,
+      record.ssp_id,
       record.farmer_name,
       record.farmer_phone,
       new Date(record.service_date).toLocaleDateString(),
