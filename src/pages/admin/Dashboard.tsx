@@ -25,7 +25,7 @@ type RecentRecord = {
   farmerName?: string;
   serviceDate?: string;
   cropsTreated?: string;
-  areaTreated?: number;
+  area_treated?: number;
   serviceCost?: number;
   ppeUsed?: boolean;
   [key: string]: any;
@@ -126,13 +126,13 @@ const Dashboard: React.FC = () => {
 
   function deriveMonthlyFromRecords(src: any[]): any[] {
     if (!Array.isArray(src) || src.length === 0) return [];
-    const months: Record<string, { name: string; areaTreated: number; serviceCost: number }> = {};
+    const months: Record<string, { name: string; area_treated: number; serviceCost: number }> = {};
     src.forEach((r) => {
-      const d = r.serviceDate ? new Date(r.serviceDate) : new Date();
+      const d = r.service_date ? new Date(r.service_date) : new Date();
       const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-      if (!months[key]) months[key] = { name: d.toLocaleString('default', { month: 'short', year: 'numeric' }), areaTreated: 0, serviceCost: 0 };
-      months[key].areaTreated += Number(r.areaTreated ?? 0);
-      months[key].serviceCost += Number(r.serviceCost ?? 0);
+      if (!months[key]) months[key] = { name: d.toLocaleString('default', { month: 'short', year: 'numeric' }), area_treated: 0, serviceCost: 0 };
+      months[key].area_treated += Number(r.area_treated ?? 0);
+      months[key].serviceCost += Number(r.service_cost ?? 0);
     });
     console.log('Derived Monthly Data: ', months);
     return Object.values(months);
@@ -142,7 +142,7 @@ const Dashboard: React.FC = () => {
     if (!Array.isArray(src) || src.length === 0) return [];
     const map: Record<string, { name: string; records: number; revenue: number; area: number }> = {};
     src.forEach((r) => {
-      const ssp = r.sspname ?? 'Unknown';
+      const ssp = r.sspName ?? 'Unknown';
       if (!map[ssp]) map[ssp] = { name: ssp, records: 0, revenue: 0, area: 0 };
       map[ssp].records += 1;
       map[ssp].revenue += Number(r.service_cost ?? 0);
@@ -242,7 +242,7 @@ const Dashboard: React.FC = () => {
                 <YAxis yAxisId="right" orientation="right" />
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="left" dataKey="areaTreated" name="Area Treated (Ha)" fill="#8884d8" />
+                <Bar yAxisId="left" dataKey="area_treated" name="Area Treated (Ha)" fill="#8884d8" />
                 <Bar yAxisId="right" dataKey="serviceCost" name="Service Cost (₦)" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
@@ -264,7 +264,7 @@ const Dashboard: React.FC = () => {
                   dataKey="value"
                   label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
                 >
-                  {dashboardData.cropData.map((entry: any, index: number) => (
+                  {dashboardData.cropData.map((_entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -309,7 +309,7 @@ const Dashboard: React.FC = () => {
             dashboardData.recentRecords.map((r, i) => (
               <div key={r.id ?? i} className="flex justify-between items-center border-b py-2">
                 <div>
-                  <div className="font-medium">{r.farmer_name ?? r.ssp_name ?? 'Unknown'}</div>
+                  <div className="font-medium">{r.farmer_name ?? r.sspName ?? 'Unknown'}</div>
                   <div className="text-xs text-gray-500">{r.crops_treated ?? '—'}</div>
                 </div>
                 <div className="text-sm text-gray-700">{r.service_date ? new Date(r.service_date).toLocaleDateString() : '—'}</div>
