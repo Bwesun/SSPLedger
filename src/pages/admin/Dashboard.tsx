@@ -74,18 +74,6 @@ const Dashboard: React.FC = () => {
           return;
         }
         const data = await res.json();
-
-        // Backend response shape (example):
-        // {
-        //   totalUsers,
-        //   totalSsp,
-        //   totalRecords,
-        //   totalServiceCost,
-        //   totalAreaTreated,
-        //   recentRecords: [...]
-        //   // optional: monthlyData, cropData, sspData
-        // }
-
         setDashboardData((prev) => ({
           ...prev,
           totalRecords: data.totalRecords ?? prev.totalRecords,
