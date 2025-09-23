@@ -143,13 +143,11 @@ const Dashboard: React.FC = () => {
     const map: Record<string, { name: string; records: number; revenue: number; area: number }> = {};
     src.forEach((r) => {
       const ssp = r.farmer_name ?? 'Unknown';
-      console.log('Processing record for SSP:', ssp, r);
       if (!map[ssp]) map[ssp] = { name: ssp, records: 0, revenue: 0, area: 0 };
       map[ssp].records += 1;
-      map[ssp].revenue += Number(r.service_cost ?? 0);
+      map[ssp].revenue += Number(r.serviceCost ?? 0);
       map[ssp].area += Number(r.area_treated ?? 0);
     });
-    console.log('SSP Performance Map: ', map);
     return Object.values(map);
   }
 
