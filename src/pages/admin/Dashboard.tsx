@@ -112,6 +112,7 @@ const Dashboard: React.FC = () => {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }
 
+  // Simple helper to derive monthly data
   function deriveMonthlyFromRecords(src: any[]): any[] {
     if (!Array.isArray(src) || src.length === 0) return [];
     const months: Record<string, { name: string; area_treated: number; service_cost: number }> = {};
@@ -126,6 +127,7 @@ const Dashboard: React.FC = () => {
     return Object.values(months);
   }
 
+  // Simple helper to derive ssp performance
   function deriveSspPerformance(src: any[]): any[] {
     if (!Array.isArray(src) || src.length === 0) return [];
     const map: Record<string, { name: string; records: number; revenue: number; area: number }> = {};
@@ -278,7 +280,7 @@ const Dashboard: React.FC = () => {
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="records" name="Records" fill="#8884d8" />
-                <Bar dataKey="revenue" name="Revenue (₦)" fill="#82ca9d" />
+                {/* <Bar dataKey="revenue" name="Revenue (₦)" fill="#82ca9d" /> */}
                 <Bar dataKey="area" name="Area (Ha)" fill="#ffc658" />
               </BarChart>
             </ResponsiveContainer>
