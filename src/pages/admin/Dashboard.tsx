@@ -17,7 +17,7 @@ import Logo from '../../assets/logo.png';
 import { FileTextIcon, UsersIcon, CropIcon, DollarSignIcon } from 'lucide-react';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 type RecentRecord = {
   id?: string;

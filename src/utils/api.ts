@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export function getApiBase() {
-  const base = (import.meta as any).env?.VITE_API_URL || '/api';
+  const base = import.meta.env.VITE_API_URL;
   return String(base).replace(/\/$/, '');
 }
 

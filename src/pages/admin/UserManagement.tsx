@@ -4,7 +4,7 @@ import { User } from '../../context/AuthContext';
 import Logo from '../../assets/logo.png';
 import { EditIcon, TrashIcon, UserPlusIcon } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);

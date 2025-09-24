@@ -60,7 +60,7 @@ export function AppRouter() {
   );
 }
 
-// ✅ Type-safe ProtectedRoute component
+// Type-safe ProtectedRoute component
 interface ProtectedRouteProps {
   children: ReactNode;
   role?: 'ssp' | 'admin';
