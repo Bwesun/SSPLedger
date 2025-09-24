@@ -72,7 +72,6 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     });
     const data = await response.json();
-    // console.log('All Records fetched: ', data);
     setRecords(data);
   };
 

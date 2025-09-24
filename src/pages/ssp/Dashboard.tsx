@@ -4,9 +4,8 @@ import { useRecords } from '../../context/RecordsContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FileTextIcon, SprayCanIcon, CropIcon, DollarSignIcon } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL ;
 const token = localStorage.getItem('token');
-// console.log('SSP Dashboard Token: ', token)
 
 const Dashboard: React.FC = () => {
   const {
@@ -23,7 +22,6 @@ const Dashboard: React.FC = () => {
     recentRecords: [] as any [],
   });
 
-  console.log('Records in Dashboard: ', records);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -45,8 +43,6 @@ const Dashboard: React.FC = () => {
     areaTreated: record.area_treated,
     serviceCost: record.service_cost / 1000,
   }));
-  console.log('Chart Data: ', chartData);
-  console.log('Dashboard Data: ', dashboardData);
   return <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>

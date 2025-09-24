@@ -18,12 +18,10 @@ const ViewRecords: React.FC = () => {
   const [sortField, setSortField] = useState<string>('serviceDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const records = useMemo(() => {
-    console.log('User in ViewRecords: ', user?.id);
     if (!user) return [];
     return getUserRecords(user.id);
   }, [getUserRecords, user]);
 
-  console.log('Records: ', records);
   const filteredRecords = useMemo(() => {
     return records.filter(record => {
       const searchLower = searchTerm.toLowerCase();
