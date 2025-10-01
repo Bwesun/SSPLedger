@@ -41,9 +41,11 @@ const Login: React.FC = () => {
           navigate('/ssp');
         }
       } else {
+        setIsLoading(false);
         setError('Invalid email or password');
       }
     } catch (err) {
+      setIsLoading(false);
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
