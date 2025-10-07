@@ -3,21 +3,25 @@ import { useRecords, LedgerRecord } from '../../context/RecordsContext';
 import { DownloadIcon, FileTextIcon, SearchIcon } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
 const RecordManagement: React.FC = () => {
-  const {
-    records
-  } = useRecords();
+  // guard the context result so records is always an array
+  const recordsCtx = useRecords();
+  const records: LedgerRecord[] = Array.isArray(recordsCtx?.records) ? recordsCtx!.records : [];
+
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof LedgerRecord>('service_date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterSSP, setFilterSSP] = useState<string>('');
 
   // Get unique SSPs for filter
-  const uniqueSSPs = [...new Set(records.map(record => record.ssp_name))].filter((s) => s !== undefined && s !== null);
+  const uniqueSSPs = [...new Set(records.map(record => record.ssp_name))].filter((s) => s !== undefined && s !== null) as string[];
 
   // Filter and sort records
   const filteredRecords = records.filter(record => {
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = record.farmer_name.toLowerCase().includes(searchLower) || record.crops_treated.toLowerCase().includes(searchLower) || record.product_used.toLowerCase().includes(searchLower);
+    const matchesSearch =
+      (record.farmer_name ?? '').toLowerCase().includes(searchLower) ||
+      (record.crops_treated ?? '').toLowerCase().includes(searchLower) ||
+      (record.product_used ?? '').toLowerCase().includes(searchLower);
     const matchesSSP = filterSSP ? record.ssp_name === filterSSP : true;
     return matchesSearch && matchesSSP;
   }).sort((a, b) => {

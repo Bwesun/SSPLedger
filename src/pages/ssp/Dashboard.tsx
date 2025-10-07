@@ -25,15 +25,28 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const response = await fetch(`${API_URL}/ssp/dashboard`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      setDashboardData(data);
+      try {
+        const response = await fetch(`${API_URL}/ssp/dashboard`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        const payload = await response.json().catch(() => null);
+        // unwrap API shape: use payload.data if present, otherwise payload
+        const d = payload?.data ?? payload ?? {};
+
+        setDashboardData({
+          totalRecords: Number(d.totalRecords ?? d.total_records ?? 0),
+          totalAreaTreated: Number(d.totalAreaTreated ?? d.total_area_treated ?? 0),
+          totalServiceCost: Number(d.totalServiceCost ?? d.total_service_cost ?? 0),
+          uniqueCrops: Number(d.uniqueCrops ?? d.unique_crops ?? 0),
+          recentRecords: Array.isArray(d.recentRecords ?? d.recent_records) ? (d.recentRecords ?? d.recent_records) : [],
+        });
+      } catch (err) {
+        console.error('fetchDashboardData error', err);
+      }
     };
     fetchDashboardData();
   }, [records]);
