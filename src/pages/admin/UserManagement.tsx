@@ -15,6 +15,9 @@ const UserManagement: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+  // loader state
+  const [loading, setLoading] = useState<boolean>(true);
+
   // form state for add/edit
   const [form, setForm] = useState({
     name: '',
@@ -29,6 +32,7 @@ const UserManagement: React.FC = () => {
 
   // Fetch users from API
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const response = await fetch(`${API_URL}/admin/users`, {
         headers: {
@@ -36,10 +40,12 @@ const UserManagement: React.FC = () => {
         },
       });
       const data = await response.json();
-      setUsers(Array.isArray(data) ? data : []);
+      setUsers(Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : []));
     } catch (err) {
       console.error('Failed to fetch users', err);
       setUsers([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -195,6 +201,21 @@ const UserManagement: React.FC = () => {
       setSaving(false);
     }
   };
+
+  // show loader while fetching users
+  if (loading) {
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <svg className="animate-spin h-10 w-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <div className="mt-3 text-gray-600">Loading users…</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

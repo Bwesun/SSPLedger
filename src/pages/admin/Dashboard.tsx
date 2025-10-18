@@ -60,8 +60,12 @@ const Dashboard: React.FC = () => {
     sspData: [],
   });
 
+  // loading state for skeleton
+  const [loading, setLoading] = useState<boolean>(true);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`${API_URL}/admin/dashboard`, {
           method: 'GET',
@@ -83,7 +87,6 @@ const Dashboard: React.FC = () => {
           totalSsp: data.totalSsp ?? prev.totalSsp,
           totalUsers: data.totalUsers ?? prev.totalUsers,
           recentRecords: Array.isArray(data.recentRecords) ? data.recentRecords : prev.recentRecords,
-          // If backend provides chart data, use it; otherwise try to derive minimal datasets
           monthlyData: Array.isArray(data.monthlyData)
             ? data.monthlyData
             : deriveMonthlyFromRecords(data.recentRecords ?? records),
@@ -92,6 +95,8 @@ const Dashboard: React.FC = () => {
         }));
       } catch (err) {
         console.error('Error fetching dashboard data', err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -142,6 +147,47 @@ const Dashboard: React.FC = () => {
   // Serial Numbering
   let sn = 1;
 
+  // skeleton while loading
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse" aria-busy="true">
+        <div className="flex items-center gap-4">
+          <div className="w-24 h-24 bg-gray-200 rounded" />
+          <div className="flex-1">
+            <div className="h-6 bg-gray-200 rounded w-1/3 mb-2" />
+            <div className="h-4 bg-gray-200 rounded w-1/2" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white overflow-hidden shadow rounded-lg p-5">
+              <div className="h-6 bg-gray-200 rounded w-1/4 mb-3" />
+              <div className="h-8 bg-gray-200 rounded w-1/3" />
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div className="bg-white p-6 shadow rounded-lg h-64">
+            <div className="h-full bg-gray-100 rounded" />
+          </div>
+          <div className="bg-white p-6 shadow rounded-lg h-64">
+            <div className="h-full bg-gray-100 rounded" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="h-6 bg-gray-200 rounded w-1/5 mb-4" />
+          <div className="space-y-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-6 bg-gray-100 rounded" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
