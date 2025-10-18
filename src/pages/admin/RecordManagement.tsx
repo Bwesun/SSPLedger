@@ -12,8 +12,15 @@ const RecordManagement: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterSSP, setFilterSSP] = useState<string>('');
 
-  // Get unique SSPs for filter
-  const uniqueSSPs = [...new Set(records.map(record => record.ssp_name))].filter((s) => s !== undefined && s !== null) as string[];
+  // Get unique SSPs for filter (use ssp_name if present, otherwise ssp_id)
+  const uniqueSSPs = Array.from(
+    new Set(
+      records
+        .map(r => (r.ssp_name ?? r.ssp_id ?? '').toString().trim())
+        .filter(s => s !== '')
+    )
+  ) as string[];
+  console.log('Unique SSPs:', uniqueSSPs);
 
   // Filter and sort records
   const filteredRecords = records.filter(record => {

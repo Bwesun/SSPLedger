@@ -26,7 +26,7 @@ export function AppRouter() {
 
         {/* Protected SSP Routes */}
         <Route
-          path="/ssp"
+          path="/ssp/"
           element={
             <ProtectedRoute role="ssp">
               <Layout />

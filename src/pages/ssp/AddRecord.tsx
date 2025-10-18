@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRecords } from '../../context/RecordsContext';
+import { LedgerRecord, useRecords } from '../../context/RecordsContext';
+import { useAuth } from '../../context/AuthContext';
 const AddRecord: React.FC = () => {
+  const {user: currentSsp} = useAuth();
   const [formData, setFormData] = useState({
     serialNumber: 1,
     farmerName: '',
@@ -46,13 +48,39 @@ const AddRecord: React.FC = () => {
       }));
     }
   };
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate SSP selection
+    if (!currentSsp || !currentSsp.id) {
+      setError('No SSP selected');
+      alert('No SSP Recognized. Refresh and try again.');
+      return;
+    }
     setError('');
     setSuccess('');
     setIsSubmitting(true);
     try {
-      addRecord(formData);
+      const payload: Omit<LedgerRecord, 'id' | 'sspId' | 'createdAt'> = {
+        ssp_id: currentSsp?.id,
+        ssp_name: currentSsp?.name,
+        serial_number: formData.serialNumber,
+        farmer_name: formData.farmerName,
+        farmer_phone: formData.farmerPhone,
+        service_date: formData.serviceDate,
+        crops_treated: formData.cropsTreated,
+        product_used: formData.productUsed,
+        sprayer_loads: formData.sprayerLoads,
+        service_cost: formData.serviceCost,
+        area_treated: formData.areaTreated,
+        ppe_used: formData.ppeUsed,
+        challenges: formData.challenges,
+        remarks: formData.remarks,
+        created_at: new Date().toISOString()
+      };
+
+      await addRecord(payload); // or api.createRecord(payload)
+
       setSuccess('Record added successfully!');
       // Reset form
       setFormData({
@@ -96,14 +124,14 @@ const AddRecord: React.FC = () => {
       <div className="bg-white shadow rounded-lg">
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-            <div className="sm:col-span-2">
+            {/* <div className="sm:col-span-2">
               <label htmlFor="serialNumber" className="block text-sm font-medium text-gray-700">
                 S/N
               </label>
               <div className="mt-1">
                 <input type="number" name="serialNumber" id="serialNumber" value={formData.serialNumber} onChange={handleChange} required className="bg-green-50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" />
               </div>
-            </div>
+            </div> */}
             <div className="sm:col-span-4">
               <label htmlFor="farmerName" className="block text-sm font-medium text-gray-700">
                 Farmer's Name

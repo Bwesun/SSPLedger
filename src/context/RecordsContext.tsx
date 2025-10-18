@@ -24,7 +24,7 @@ export interface LedgerRecord {
 interface RecordsContextType {
   records: LedgerRecord[];
   addRecord: (
-    record: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>
+    record: Omit<LedgerRecord, 'id' | 'sspId' | 'createdAt'>
   ) => Promise<void>;
   getUserRecords: (userId: string) => LedgerRecord[];
   getAllRecords: () => LedgerRecord[];
@@ -76,7 +76,7 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const addRecord = async (
-    recordData: Omit<LedgerRecord, 'id' | 'sspId' | 'sspName' | 'createdAt'>
+    recordData: Omit<LedgerRecord, 'id' | 'sspId' | 'ssp_name' | 'createdAt'>
   ) => {
     if (!user) return;
     console.log('Before Sending recordData: ', recordData);
@@ -88,7 +88,6 @@ export const RecordsProvider: React.FC<{ children: React.ReactNode }> = ({
       },
       body: JSON.stringify({
         ...recordData,
-        sspName: user.name
       })
     });
 
