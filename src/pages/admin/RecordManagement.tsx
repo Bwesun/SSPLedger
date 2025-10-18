@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRecords, LedgerRecord } from '../../context/RecordsContext';
 import { DownloadIcon, FileTextIcon, SearchIcon } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
@@ -6,6 +6,42 @@ const RecordManagement: React.FC = () => {
   // guard the context result so records is always an array
   const recordsCtx = useRecords();
   const records: LedgerRecord[] = Array.isArray(recordsCtx?.records) ? recordsCtx!.records : [];
+
+  // loader state: prefer context's loading flag if present, otherwise
+  // show loader until records array is known (even if empty)
+  const [loading, setLoading] = useState<boolean>(() => {
+    const ctxLoading = (recordsCtx as any)?.loading;
+    if (typeof ctxLoading === 'boolean') return ctxLoading;
+    return !Array.isArray(recordsCtx?.records) || recordsCtx?.records.length === 0;
+  });
+
+  useEffect(() => {
+    const ctxLoading = (recordsCtx as any)?.loading;
+    if (typeof ctxLoading === 'boolean') {
+      setLoading(ctxLoading);
+      return;
+    }
+    if (recordsCtx && Array.isArray(recordsCtx.records)) {
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+  }, [recordsCtx, (recordsCtx as any)?.loading, recordsCtx?.records]);
+
+  // show loader while fetching
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <svg className="animate-spin h-10 w-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <div className="mt-3 text-gray-600">Loading records…</div>
+        </div>
+      </div>
+    );
+  }
 
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof LedgerRecord>('service_date');
@@ -130,7 +166,7 @@ const RecordManagement: React.FC = () => {
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('crops_treated')}>
                           Crop
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('area_treated')}>
+                        <th scope="col" className="px-3 py-3.5 text-left textsm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('area_treated')}>
                           Area (Ha)
                         </th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer" onClick={() => handleSort('service_cost')}>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 // import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRecords } from '../../context/RecordsContext';
@@ -7,28 +7,51 @@ import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
 // import { PlusIcon, DownloadIcon, FileTextIcon } from 'lucide-react';
 // import { exportToExcel, exportToPDF } from '../../utils/exportUtils';
 const ViewRecords: React.FC = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    getUserRecords
-  } = useRecords();
+  const { user } = useAuth();
+  const { getUserRecords } = useRecords();
   // const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string>('serviceDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const records = useMemo(() => {
-    if (!user) return [];
-    return getUserRecords(user.id);
+
+  const [records, setRecords] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        if (!user) {
+          if (mounted) setRecords([]);
+          return;
+        }
+        const r = getUserRecords(user.id);
+        // support sync or promise-returning getUserRecords
+        const resolved = r instanceof Promise ? await r : r;
+        if (mounted) setRecords(Array.isArray(resolved) ? resolved : []);
+      } catch (err) {
+        console.error('Failed to load records', err);
+        if (mounted) setRecords([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
   }, [getUserRecords, user]);
 
   const filteredRecords = useMemo(() => {
     return records.filter(record => {
       const searchLower = searchTerm.toLowerCase();
-      return record.farmer_name.toLowerCase().includes(searchLower) || record.crops_treated.toLowerCase().includes(searchLower) || record.product_used.toLowerCase().includes(searchLower);
+      return (record.farmer_name ?? '').toLowerCase().includes(searchLower)
+        || (record.crops_treated ?? '').toLowerCase().includes(searchLower)
+        || (record.product_used ?? '').toLowerCase().includes(searchLower);
     });
   }, [records, searchTerm]);
-  
+
   const sortedRecords = useMemo(() => {
     return [...filteredRecords].sort((a, b) => {
       const aValue = a[sortField as keyof typeof a];
@@ -45,6 +68,7 @@ const ViewRecords: React.FC = () => {
       return 0;
     });
   }, [filteredRecords, sortField, sortDirection]);
+
   const handleSort = (field: string) => {
     if (field === sortField) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -61,6 +85,21 @@ const ViewRecords: React.FC = () => {
   };
 
   let sn = 1;
+
+  if (loading) {
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <svg className="animate-spin h-10 w-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <div className="mt-3 text-gray-600">Loading your records…</div>
+        </div>
+      </div>
+    );
+  }
+
   return <div>
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div className="min-w-0 flex-1">
@@ -70,11 +109,11 @@ const ViewRecords: React.FC = () => {
         </div>
         {/* Exports Section */}
         <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
-          <button type="button" onClick={handleExportToExcel} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <button type="button" onClick={handleExportToExcel} disabled={sortedRecords.length === 0} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <DownloadIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Export to Excel
           </button>
-          <button type="button" onClick={handleExportToPDF} className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <button type="button" onClick={handleExportToPDF} disabled={sortedRecords.length === 0} className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <FileTextIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Export to PDF
           </button>
@@ -82,8 +121,7 @@ const ViewRecords: React.FC = () => {
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Add New Record
           </button>
-        </div> {/* */}
-      </div>
+        </div> {/* */}      </div>
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           {/* Search and filters */}
