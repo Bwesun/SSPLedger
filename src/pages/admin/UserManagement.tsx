@@ -11,12 +11,18 @@ const UserManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // debounced query sent to backend
   const [sortField, setSortField] = useState<keyof User>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
   // loader state
   const [loading, setLoading] = useState<boolean>(true);
+
+  // pagination state
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10); // page size
+  const [total, setTotal] = useState<number>(0);
 
   // form state for add/edit
   const [form, setForm] = useState({
@@ -30,29 +36,78 @@ const UserManagement: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch users from API
-  const fetchUsers = async () => {
+  // Fetch users from API (server-side pagination + search)
+  const fetchUsers = async (p = page, lim = limit, q = searchQuery) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/admin/users`, {
+      // build URL safely
+      const params = new URLSearchParams();
+      params.set('page', String(p));
+      params.set('limit', String(lim));
+      if (q && q.trim() !== '') params.set('search', q.trim());
+
+      const url = `${API_URL}/admin/users?${params.toString()}`;
+      const response = await fetch(url, {
         headers: {
           Authorization: token ? `Bearer ${token}` : '',
         },
       });
-      const data = await response.json();
-      setUsers(Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : []));
+
+      const data = await response.json().catch(() => null);
+
+      // Support multiple API shapes:
+      // 1. { data: [...], total: N, page, limit }
+      // 2. { users: [...], total: N }
+      // 3. array [...]
+      if (!data) {
+        setUsers([]);
+        setTotal(0);
+      } else if (Array.isArray(data)) {
+        setUsers(data);
+        setTotal(data.length);
+      } else {
+        const list = Array.isArray(data.data)
+          ? data.data
+          : Array.isArray(data.users)
+          ? data.users
+          : Array.isArray(data.items)
+          ? data.items
+          : [];
+        setUsers(list);
+        setTotal(Number(data.total ?? data.count ?? data.totalCount ?? list.length));
+        // ensure page/limit reflect server if provided
+        if (typeof data.page === 'number') setPage(data.page);
+        if (typeof data.limit === 'number') setLimit(data.limit);
+      }
     } catch (err) {
       console.error('Failed to fetch users', err);
       setUsers([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
+  // initial + when page/limit/searchQuery changes
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(page, limit, searchQuery);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page, limit, searchQuery]);
+
+  // reset to first page when changing page size
+  useEffect(() => {
+    setPage(1);
+  }, [limit]);
+
+  // debounce searchTerm -> searchQuery (sent to backend)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      // when user enters a new search, send it to backend and reset to page 1
+      setSearchQuery(searchTerm.trim());
+      setPage(1);
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   // when opening modal for edit, populate form
   useEffect(() => {
@@ -81,25 +136,17 @@ const UserManagement: React.FC = () => {
     }
   }, [isModalOpen, currentUser]);
 
-  // Filtered and searched users
-  const filteredUsers = users
-    .filter(
-      (user) =>
-        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (user.state && user.state.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (user.lga && user.lga.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-    .sort((a, b) => {
-      const aValue = (a[sortField] as any) || '';
-      const bValue = (b[sortField] as any) || '';
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-      }
-      return 0;
-    });
+  // Client-side sorting only (search is server-side now)
+  const displayedUsers = [...users].sort((a, b) => {
+    const aValue = (a[sortField] as any) || '';
+    const bValue = (b[sortField] as any) || '';
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+    }
+    return 0;
+  });
 
-  // Sort users
+  // Sort users (local UI)
   const handleSort = (field: keyof User) => {
     if (field === sortField) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -125,7 +172,8 @@ const UserManagement: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-      await fetchUsers();
+      // refetch current page after delete
+      fetchUsers(page, limit, searchQuery);
     } catch (err) {
       console.error('Failed to delete user', err);
     }
@@ -191,7 +239,8 @@ const UserManagement: React.FC = () => {
         }
       }
 
-      await fetchUsers();
+      // after save, refresh current page
+      await fetchUsers(page, limit, searchQuery);
       setIsModalOpen(false);
       setCurrentUser(null);
     } catch (err: any) {
@@ -216,6 +265,11 @@ const UserManagement: React.FC = () => {
       </div>
     );
   }
+
+  // pagination helpers
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const startIndex = total === 0 ? 0 : (page - 1) * limit + 1;
+  const endIndex = Math.min(total, page * limit);
 
   return (
     <div>
@@ -254,6 +308,17 @@ const UserManagement: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+
+            {/* page size selector */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-gray-600">Page size:</label>
+              <select value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="border rounded p-1">
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
           </div>
 
           {/* Users table */}
@@ -274,7 +339,7 @@ const UserManagement: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredUsers.map((user) => (
+                      {displayedUsers.map((user) => (
                         <tr key={user.id}>
                           <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{user.name}</td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{user.email}</td>
@@ -308,6 +373,33 @@ const UserManagement: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
+
+                  {/* pagination footer */}
+                  <div className="px-4 py-3 bg-white border-t flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      Showing {startIndex}-{endIndex} of {total} users
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page <= 1}
+                        className="px-3 py-1 border rounded disabled:opacity-50"
+                      >
+                        Prev
+                      </button>
+                      <div className="text-sm">
+                        Page {page} / {totalPages}
+                      </div>
+                      <button
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page >= totalPages}
+                        className="px-3 py-1 border rounded disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>

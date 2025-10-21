@@ -48,6 +48,11 @@ const RecordManagement: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterSSP, setFilterSSP] = useState<string>('');
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(25);
+  const pageSizeOptions = [10, 25, 50, 100];
+
   // Get unique SSPs for filter (use ssp_name if present, otherwise ssp_id)
   const uniqueSSPs = Array.from(
     new Set(
@@ -81,6 +86,25 @@ const RecordManagement: React.FC = () => {
     }
     return 0;
   });
+
+  // Reset to first page when filters/search/sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterSSP, sortField, sortDirection, pageSize, records.length]);
+
+  const totalRecords = filteredRecords.length;
+  const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
+
+  // Ensure currentPage is within bounds if totalPages changed
+  useEffect(() => {
+    setCurrentPage(prev => (prev > totalPages ? totalPages : prev));
+  }, [totalPages]);
+
+  // Compute paginated slice
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+
   const handleSort = (field: keyof LedgerRecord) => {
     if (field === sortField) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -101,8 +125,45 @@ const RecordManagement: React.FC = () => {
     exportToPDF(filteredRecords, fileName, filterSSP);
   };
 
-  // Numbering counter
-  let sn = 1;
+  // Numbering counter removed; compute per row using current page
+  // let sn = 1;
+
+  const goToPage = (page: number) => {
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    setCurrentPage(page);
+  };
+
+  const renderPageButtons = () => {
+    // show up to 7 buttons: first, prev few, current, next few, last
+    const pages: (number | '...')[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      const left = Math.max(2, currentPage - 1);
+      const right = Math.min(totalPages - 1, currentPage + 1);
+
+      if (left > 2) pages.push('...');
+      for (let p = left; p <= right; p++) pages.push(p);
+      if (right < totalPages - 1) pages.push('...');
+      pages.push(totalPages);
+    }
+
+    return pages.map((p, i) =>
+      p === '...' ? (
+        <span key={`dots-${i}`} className="px-2 py-1 text-sm text-gray-500">…</span>
+      ) : (
+        <button
+          key={p}
+          onClick={() => goToPage(p as number)}
+          className={`px-3 py-1 rounded-md text-sm ${p === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border'}`}
+        >
+          {p}
+        </button>
+      )
+    );
+  };
 
   return <div>
       <div className="md:flex md:items-center md:justify-between mb-6">
@@ -178,10 +239,10 @@ const RecordManagement: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredRecords.map((record, idx) => (
-                        <tr key={record.id ?? `${record.serial_number ?? 'sn'}-${idx}`}>
+                      {paginatedRecords.map((record, idx) => (
+                        <tr key={record.id ?? `${record.serial_number ?? 'sn'}-${startIndex + idx}`}>
                           <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                            {sn++}
+                            {(startIndex + idx + 1)}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                             {record.ssp_id ?? '-'}
@@ -206,8 +267,42 @@ const RecordManagement: React.FC = () => {
                           </td>
                         </tr>
                       ))}
+                      {paginatedRecords.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="py-6 text-center text-sm text-gray-500">
+                            No records found.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
+                  {/* Pagination controls */}
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+                    <div className="flex items-center space-x-4">
+                      <div className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{totalRecords === 0 ? 0 : startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, totalRecords)}</span> of <span className="font-medium">{totalRecords}</span> records
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-700 mr-2">Rows:</label>
+                        <select value={pageSize} onChange={e => setPageSize(Number(e.target.value))} className="border rounded-md py-1 px-2 text-sm">
+                          {pageSizeOptions.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border rounded-md text-sm bg-white disabled:opacity-50">
+                        Prev
+                      </button>
+                      <div className="flex items-center space-x-1">
+                        {renderPageButtons()}
+                      </div>
+                      <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-md text-sm bg-white disabled:opacity-50">
+                        Next
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
